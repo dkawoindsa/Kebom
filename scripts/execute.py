@@ -237,23 +237,24 @@ class StepExecutor:
         prompt = preamble + step_file.read_text(encoding='utf-8')
         result = subprocess.run(
             "claude -p --dangerously-skip-permissions --output-format json",
-            input=prompt,
-            cwd=self._root, capture_output=True, text=True,
-            encoding='utf-8', errors='replace', timeout=1800, shell=True,
+            input=prompt.encode('utf-8'),
+            cwd=self._root, capture_output=True, timeout=1800, shell=True,
         )
+        stdout_text = result.stdout.decode('utf-8', errors='replace') if result.stdout else ''
+        stderr_text = result.stderr.decode('utf-8', errors='replace') if result.stderr else ''
 
         if result.returncode != 0:
             print(f"\n  WARN: Claude가 비정상 종료됨 (code {result.returncode})")
-            if result.stderr:
-                print(f"  stderr: {result.stderr[:500]}")
+            if stderr_text:
+                print(f"  stderr: {stderr_text[:500]}")
 
         output = {
             "step": step_num, "name": step_name,
             "exitCode": result.returncode,
-            "stdout": result.stdout, "stderr": result.stderr,
+            "stdout": stdout_text, "stderr": stderr_text,
         }
         out_path = self._phase_dir / f"step{step_num}-output.json"
-        with open(out_path, "w") as f:
+        with open(out_path, "w", encoding='utf-8') as f:
             json.dump(output, f, indent=2, ensure_ascii=False)
 
         return output
@@ -407,6 +408,9 @@ class StepExecutor:
 
 
 def main():
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
     parser = argparse.ArgumentParser(description="Harness Step Executor")
     parser.add_argument("phase_dir", help="Phase directory name (e.g. 0-mvp)")
     parser.add_argument("--push", action="store_true", help="Push branch after completion")
