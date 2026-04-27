@@ -1,0 +1,24 @@
+{
+  "project": "kebom",
+  "phase": "0-bootstrap",
+  "steps": [
+    {
+      "step": 0,
+      "name": "project-config",
+      "status": "completed",
+      "started_at": "2026-04-27T17:31:05+0900",
+      "summary": "package.json, tsconfig.json, next.config.ts(serverExternalPackages+bodySizeLimit), jest.config.ts(setupFilesAfterEnv), postcss.config.mjs, eslint.config.mjs, jest.setup.ts 생성 및 .gitignore에 .env.local 항목 추가"
+    },
+    {
+      "step": 1,
+      "name": "app-entry",
+      "status": "pending"
+    },
+    {
+      "step": 2,
+      "name": "test-infra",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-04-27T17:31:05+0900"
+}
