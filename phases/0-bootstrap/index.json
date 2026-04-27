@@ -7,12 +7,16 @@
       "name": "project-config",
       "status": "completed",
       "started_at": "2026-04-27T17:31:05+0900",
-      "summary": "package.json, tsconfig.json, next.config.ts(serverExternalPackages+bodySizeLimit), jest.config.ts(setupFilesAfterEnv), postcss.config.mjs, eslint.config.mjs, jest.setup.ts 생성 및 .gitignore에 .env.local 항목 추가"
+      "summary": "package.json, tsconfig.json, next.config.ts(serverExternalPackages+bodySizeLimit), jest.config.ts(setupFilesAfterEnv), postcss.config.mjs, eslint.config.mjs, jest.setup.ts 생성 및 .gitignore에 .env.local 항목 추가",
+      "completed_at": "2026-04-27T17:35:24+0900"
     },
     {
       "step": 1,
       "name": "app-entry",
-      "status": "pending"
+      "status": "error",
+      "started_at": "2026-04-27T17:36:56+0900",
+      "error_message": "[3회 시도 후 실패] Step did not update status",
+      "failed_at": "2026-04-27T17:37:08+0900"
     },
     {
       "step": 2,
