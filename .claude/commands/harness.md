@@ -73,11 +73,11 @@
 
 상태 전이와 자동 기록 필드:
 
-| 전이 | 기록되는 필드 | 기록 주체 |
-|------|-------------|----------|
-| → `completed` | `completed_at`, `summary` | Claude 세션 (summary), execute.py (timestamp) |
-| → `error` | `failed_at`, `error_message` | Claude 세션 (message), execute.py (timestamp) |
-| → `blocked` | `blocked_at`, `blocked_reason` | Claude 세션 (reason), execute.py (timestamp) |
+| 전이          | 기록되는 필드                  | 기록 주체                                     |
+| ------------- | ------------------------------ | --------------------------------------------- |
+| → `completed` | `completed_at`, `summary`      | Claude 세션 (summary), execute.py (timestamp) |
+| → `error`     | `failed_at`, `error_message`   | Claude 세션 (message), execute.py (timestamp) |
+| → `blocked`   | `blocked_at`, `blocked_reason` | Claude 세션 (reason), execute.py (timestamp)  |
 
 `summary`는 step 완료 시 산출물을 한 줄로 요약한 것으로, execute.py가 다음 step 프롬프트에 컨텍스트로 누적 전달한다. 따라서 다음 step에 유용한 정보(생성된 파일, 핵심 결정 등)를 담아야 한다.
 
@@ -85,7 +85,7 @@
 
 #### D-3. `phases/{task-name}/step{N}.md` (각 step마다 1개)
 
-```markdown
+````markdown
 # Step {N}: {이름}
 
 ## 읽어야 할 파일
@@ -110,6 +110,7 @@
 npm run build   # 컴파일 에러 없음
 npm test        # 테스트 통과
 ```
+````
 
 ## 검증 절차
 
@@ -127,19 +128,20 @@ npm test        # 테스트 통과
 
 - {이 step에서 하지 말아야 할 것. "X를 하지 마라. 이유: Y" 형식}
 - 기존 테스트를 깨뜨리지 마라
-```
+
+````
 
 ### E. 실행
 
 ```bash
 python3 scripts/execute.py {task-name}        # 순차 실행
 python3 scripts/execute.py {task-name} --push  # 실행 후 push
-```
+````
 
 execute.py가 자동으로 처리하는 것:
 
 - `feat-{task-name}` 브랜치 생성/checkout
-- 가드레일 주입 — CLAUDE.md + docs/*.md 내용을 매 step 프롬프트에 포함
+- 가드레일 주입 — CLAUDE.md + docs/\*.md 내용을 매 step 프롬프트에 포함/
 - 컨텍스트 누적 — 완료된 step의 summary를 다음 step 프롬프트에 전달
 - 자가 교정 — 실패 시 최대 3회 재시도하며, 이전 에러 메시지를 프롬프트에 피드백
 - 2단계 커밋 — 코드 변경(`feat`)과 메타데이터(`chore`)를 분리 커밋

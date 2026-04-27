@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 scripts/execute.py 0-bootstrap)",
+      "Bash(claude --version)",
+      "Bash(claude -p --dangerously-skip-permissions --output-format json \"say hello\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(echo \"EXIT: $?\")"
+    ]
+  }
+}
