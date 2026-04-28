@@ -1,0 +1,14 @@
+{
+  "project": "kebom",
+  "phase": "1-types",
+  "steps": [
+    {
+      "step": 0,
+      "name": "type-definitions",
+      "status": "completed",
+      "started_at": "2026-04-28T17:04:23+0900",
+      "summary": "src/types/{resume,analysis,wizard,api,index}.ts 생성"
+    }
+  ],
+  "created_at": "2026-04-28T17:04:23+0900"
+}
