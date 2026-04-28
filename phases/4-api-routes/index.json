@@ -1,0 +1,19 @@
+{
+  "project": "kebom",
+  "phase": "4-api-routes",
+  "steps": [
+    {
+      "step": 0,
+      "name": "parse-resume-route",
+      "status": "completed",
+      "started_at": "2026-04-28T17:22:24+0900",
+      "summary": "src/app/api/parse-resume/route.ts 생성 — runtime=nodejs, 8단계 검증, PDF+JD 파싱"
+    },
+    {
+      "step": 1,
+      "name": "analyze-route",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-04-28T17:22:24+0900"
+}
