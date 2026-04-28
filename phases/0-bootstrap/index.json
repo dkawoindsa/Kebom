@@ -24,7 +24,7 @@
       "status": "completed",
       "started_at": "2026-04-28T16:57:48+0900",
       "summary": "ts-node 설치, jest.setup.ts 확인, src/__tests__/{lib,api,components}/placeholder.test.ts(x) + RootPage.test.tsx 생성, npm test 4개 통과",
-      "completed_at": "2026-04-28T17:05:00+0900"
+      "completed_at": "2026-04-28T16:59:12+0900"
     }
   ],
   "created_at": "2026-04-27T17:31:05+0900"
