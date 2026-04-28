@@ -7,7 +7,8 @@
       "name": "wizard-reducer",
       "status": "completed",
       "started_at": "2026-04-28T17:09:10+0900",
-      "summary": "src/lib/wizardReducer.ts 생성 — initialState + wizardReducer 순수 함수"
+      "summary": "src/lib/wizardReducer.ts 생성 — initialState + wizardReducer 순수 함수",
+      "completed_at": "2026-04-28T17:09:58+0900"
     },
     {
       "step": 1,
