@@ -17,7 +17,8 @@
     },
     {
       "dir": "3-ai-layer",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-04-28T17:19:28+0900"
     }
   ]
 }
