@@ -1,0 +1,24 @@
+{
+  "project": "kebom",
+  "phase": "3-ai-layer",
+  "steps": [
+    {
+      "step": 0,
+      "name": "parse-resume-ai",
+      "status": "completed",
+      "started_at": "2026-04-28T17:16:09+0900",
+      "summary": "src/lib/ai/parse-resume.ts 생성 — parseResume(pdfText) claude-sonnet-4-6"
+    },
+    {
+      "step": 1,
+      "name": "parse-jd-ai",
+      "status": "pending"
+    },
+    {
+      "step": 2,
+      "name": "analyze-ai",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-04-28T17:16:09+0900"
+}
