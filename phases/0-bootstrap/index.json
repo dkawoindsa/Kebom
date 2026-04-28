@@ -13,10 +13,10 @@
     {
       "step": 1,
       "name": "app-entry",
-      "status": "error",
-      "started_at": "2026-04-27T17:36:56+0900",
-      "error_message": "[3회 시도 후 실패] Step did not update status",
-      "failed_at": "2026-04-27T17:37:08+0900"
+      "status": "completed",
+      "started_at": "2026-04-28T16:55:27+0900",
+      "summary": "npm install 완료, src/app/globals.css(Tailwind v4 import), src/app/layout.tsx(lang=ko, #0a0a0a 다크 배경), src/app/page.tsx(캐봄 플레이스홀더) 생성, npm run build 통과",
+      "completed_at": "2026-04-28T17:00:00+0900"
     },
     {
       "step": 2,
