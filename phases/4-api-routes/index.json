@@ -7,7 +7,8 @@
       "name": "parse-resume-route",
       "status": "completed",
       "started_at": "2026-04-28T17:22:24+0900",
-      "summary": "src/app/api/parse-resume/route.ts 생성 — runtime=nodejs, 8단계 검증, PDF+JD 파싱"
+      "summary": "src/app/api/parse-resume/route.ts 생성 — runtime=nodejs, 8단계 검증, PDF+JD 파싱",
+      "completed_at": "2026-04-28T17:23:55+0900"
     },
     {
       "step": 1,
