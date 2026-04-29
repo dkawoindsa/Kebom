@@ -7,7 +7,8 @@
       "name": "skill-badge",
       "status": "completed",
       "started_at": "2026-04-29T15:56:30+0900",
-      "summary": "src/components/ui/SkillBadge.tsx 생성 — match/partial/missing 스타일, onDelete 버튼, 접근성"
+      "summary": "src/components/ui/SkillBadge.tsx 생성 — match/partial/missing 스타일, onDelete 버튼, 접근성",
+      "completed_at": "2026-04-29T15:57:25+0900"
     },
     {
       "step": 1,
