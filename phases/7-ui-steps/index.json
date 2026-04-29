@@ -29,7 +29,10 @@
     {
       "step": 3,
       "name": "step-action",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-04-29T16:04:50+0900",
+      "summary": "src/components/wizard/StepAction.tsx 생성 — Danger Zone, Magic Fix, 클립보드 복사, 더 보기",
+      "completed_at": "2026-04-29T16:10:00+0900"
     },
     {
       "step": 4,
