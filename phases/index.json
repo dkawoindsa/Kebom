@@ -37,7 +37,8 @@
     },
     {
       "dir": "7-ui-steps",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-04-29T16:07:57+0900"
     },
     {
       "dir": "8-tests",
