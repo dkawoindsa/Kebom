@@ -1,0 +1,11 @@
+{
+  "project": "kebom",
+  "phase": "7-ui-steps",
+  "steps": [
+    { "step": 0, "name": "step-upload", "status": "pending" },
+    { "step": 1, "name": "step-read", "status": "pending" },
+    { "step": 2, "name": "step-analyze", "status": "pending" },
+    { "step": 3, "name": "step-action", "status": "pending" },
+    { "step": 4, "name": "wizard-wire", "status": "pending" }
+  ]
+}

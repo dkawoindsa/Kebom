@@ -29,6 +29,22 @@
       "dir": "5-ui-shell",
       "status": "completed",
       "completed_at": "2026-04-29T00:00:00+0900"
+    },
+    {
+      "dir": "6-ui-components",
+      "status": "pending"
+    },
+    {
+      "dir": "7-ui-steps",
+      "status": "pending"
+    },
+    {
+      "dir": "8-tests",
+      "status": "pending"
+    },
+    {
+      "dir": "9-build-polish",
+      "status": "pending"
     }
   ]
 }

@@ -1,0 +1,7 @@
+{
+  "project": "kebom",
+  "phase": "9-build-polish",
+  "steps": [
+    { "step": 0, "name": "final-build", "status": "pending" }
+  ]
+}
