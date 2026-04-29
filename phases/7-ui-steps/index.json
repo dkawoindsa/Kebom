@@ -7,7 +7,8 @@
       "name": "step-upload",
       "status": "completed",
       "started_at": "2026-04-29T16:00:53+0900",
-      "summary": "src/components/wizard/StepUpload.tsx 생성 — PDF/JD 폼, FileDropzone, 제출 비활성화, 에러 배너"
+      "summary": "src/components/wizard/StepUpload.tsx 생성 — PDF/JD 폼, FileDropzone, 제출 비활성화, 에러 배너",
+      "completed_at": "2026-04-29T16:01:58+0900"
     },
     {
       "step": 1,
