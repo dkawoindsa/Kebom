@@ -2,10 +2,33 @@
   "project": "kebom",
   "phase": "7-ui-steps",
   "steps": [
-    { "step": 0, "name": "step-upload", "status": "pending" },
-    { "step": 1, "name": "step-read", "status": "pending" },
-    { "step": 2, "name": "step-analyze", "status": "pending" },
-    { "step": 3, "name": "step-action", "status": "pending" },
-    { "step": 4, "name": "wizard-wire", "status": "pending" }
-  ]
+    {
+      "step": 0,
+      "name": "step-upload",
+      "status": "completed",
+      "started_at": "2026-04-29T16:00:53+0900",
+      "summary": "src/components/wizard/StepUpload.tsx 생성 — PDF/JD 폼, FileDropzone, 제출 비활성화, 에러 배너"
+    },
+    {
+      "step": 1,
+      "name": "step-read",
+      "status": "pending"
+    },
+    {
+      "step": 2,
+      "name": "step-analyze",
+      "status": "pending"
+    },
+    {
+      "step": 3,
+      "name": "step-action",
+      "status": "pending"
+    },
+    {
+      "step": 4,
+      "name": "wizard-wire",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-04-29T16:00:53+0900"
 }
