@@ -144,6 +144,7 @@ export default function WizardShell() {
     };
   }, [state.loading]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function handleParseSubmit(formData: FormData): Promise<void> {
     dispatch({ type: 'PARSE_START' });
 

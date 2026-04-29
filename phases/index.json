@@ -27,7 +27,8 @@
     },
     {
       "dir": "5-ui-shell",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-04-29T00:00:00+0900"
     }
   ]
 }
