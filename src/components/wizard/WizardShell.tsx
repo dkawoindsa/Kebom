@@ -6,6 +6,11 @@ import { PARSE_TIMEOUT_MS, ANALYZE_TIMEOUT_MS, SLOW_LOADING_HINT_MS } from '@/li
 import type { ResumeData, JobRequirements } from '@/types/resume';
 import type { AnalysisResult } from '@/types/analysis';
 import type { ParseResumeResponse, AnalyzeRequest, AnalyzeResponse, ApiErrorResponse } from '@/types/api';
+import StepUpload from './StepUpload';
+import StepRead from './StepRead';
+import StepAnalyze from './StepAnalyze';
+import StepAction from './StepAction';
+import ProgressBar from '@/components/ui/ProgressBar';
 
 async function fetchAnalyze(
   resumeData: Omit<ResumeData, 'rawText'>,
@@ -144,7 +149,6 @@ export default function WizardShell() {
     };
   }, [state.loading]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function handleParseSubmit(formData: FormData): Promise<void> {
     dispatch({ type: 'PARSE_START' });
 
@@ -192,10 +196,6 @@ export default function WizardShell() {
     dispatch({ type: 'RESET' });
   }
 
-  function handleClearError(): void {
-    dispatch({ type: 'CLEAR_ERROR' });
-  }
-
   let content: React.ReactNode;
 
   if (state.loading === 'parsing') {
@@ -203,42 +203,22 @@ export default function WizardShell() {
   } else if (state.loading === 'analyzing') {
     content = <AnalyzingSkeletonUI showSlowHint={showSlowHint} />;
   } else if (state.step === 'upload') {
-    content = (
-      <div className="text-sm text-neutral-500">
-        StepUpload placeholder
-        {state.error && (
-          <div role="alert" aria-live="assertive" className="mt-4 rounded-lg border border-red-800/60 bg-red-950/50 px-4 py-3 text-sm text-red-300">
-            {state.error.message}
-            <button onClick={handleClearError} className="ml-3 text-xs text-neutral-400 hover:text-white">다시 시도</button>
-          </div>
-        )}
-      </div>
-    );
+    content = <StepUpload onSubmit={handleParseSubmit} loading={state.loading} error={state.error} />;
   } else if (state.step === 'read') {
     content = (
-      <div className="text-sm text-neutral-500">
-        StepRead placeholder
-        {state.error && (
-          <div role="alert" aria-live="assertive" className="mt-4 rounded-lg border border-red-800/60 bg-red-950/50 px-4 py-3 text-sm text-red-300">
-            {state.error.message}
-            <button
-              onClick={() => {
-                handleClearError();
-                if (state.resumeData) handleConfirmRead(state.resumeData);
-              }}
-              className="ml-3 text-xs text-neutral-400 hover:text-white"
-            >
-              분석 재시도
-            </button>
-          </div>
-        )}
-      </div>
+      <StepRead
+        resumeData={state.resumeData!}
+        jobRequirements={state.jobRequirements!}
+        onConfirm={handleConfirmRead}
+        loading={state.loading}
+        error={state.error}
+      />
     );
   } else {
     content = (
-      <div className="space-y-4">
-        <div className="text-sm text-neutral-500">StepAnalyze placeholder</div>
-        <div className="text-sm text-neutral-500">StepAction placeholder</div>
+      <div className="space-y-6">
+        <StepAnalyze analysisResult={state.analysisResult!} />
+        <StepAction analysisResult={state.analysisResult!} />
       </div>
     );
   }
@@ -257,28 +237,11 @@ export default function WizardShell() {
             </button>
           )}
         </div>
-        {/* 3단계 진행 표시기 */}
-        <div className="mb-8 flex items-center gap-2 text-sm">
-          <span className={state.step === 'upload' ? 'font-medium text-white' : 'text-neutral-500'}>1 Read</span>
-          <span className="text-neutral-700">→</span>
-          <span className={state.step === 'read' || state.loading === 'parsing' ? 'font-medium text-white' : state.step !== 'upload' ? 'text-neutral-500' : 'text-neutral-700'}>2 Analyze</span>
-          <span className="text-neutral-700">→</span>
-          <span className={state.step === 'action' || state.step === 'analyze' ? 'font-medium text-white' : 'text-neutral-700'}>3 Action</span>
+        <div className="mb-8">
+          <ProgressBar step={state.step} loading={state.loading} />
         </div>
         {content}
-        {/* Dev helpers passed via props for later steps */}
-        <div className="hidden">
-          {/* handleParseSubmit, handleConfirmRead, handleReset exposed for child components */}
-        </div>
       </div>
     </main>
   );
-}
-
-export type { WizardShellProps };
-
-interface WizardShellProps {
-  onParseSubmit?: (formData: FormData) => Promise<void>;
-  onConfirmRead?: (data: ResumeData) => void;
-  onReset?: () => void;
 }
