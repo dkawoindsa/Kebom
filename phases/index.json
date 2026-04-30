@@ -42,7 +42,8 @@
     },
     {
       "dir": "8-tests",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-04-30T17:33:09+0900"
     },
     {
       "dir": "9-build-polish",
