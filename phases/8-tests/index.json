@@ -2,9 +2,28 @@
   "project": "kebom",
   "phase": "8-tests",
   "steps": [
-    { "step": 0, "name": "lib-tests", "status": "pending" },
-    { "step": 1, "name": "api-tests", "status": "pending" },
-    { "step": 2, "name": "wizard-tests", "status": "pending" },
-    { "step": 3, "name": "ui-tests", "status": "pending" }
-  ]
+    {
+      "step": 0,
+      "name": "lib-tests",
+      "status": "completed",
+      "started_at": "2026-04-30T17:09:06+0900",
+      "summary": "wizardReducer.test.ts (모든 Action 전이 18개), pdf.test.ts (pdf-parse 모킹) 생성"
+    },
+    {
+      "step": 1,
+      "name": "api-tests",
+      "status": "pending"
+    },
+    {
+      "step": 2,
+      "name": "wizard-tests",
+      "status": "pending"
+    },
+    {
+      "step": 3,
+      "name": "ui-tests",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-04-30T17:09:06+0900"
 }
