@@ -16,7 +16,7 @@
       "status": "completed",
       "started_at": "2026-04-30T17:11:06+0900",
       "summary": "parse-resume.test.ts, analyze.test.ts 생성 — API 라우트 직접 import, SDK 모킹",
-      "completed_at": "2026-04-30T17:30:00+0900"
+      "completed_at": "2026-04-30T17:16:12+0900"
     },
     {
       "step": 2,
