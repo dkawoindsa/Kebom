@@ -127,6 +127,7 @@ export default function FileDropzone({
           accept={accept}
           className="hidden"
           onChange={onInputChange}
+          data-testid="file-input"
         />
 
         {selectedFile ? (
