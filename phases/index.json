@@ -47,7 +47,8 @@
     },
     {
       "dir": "9-build-polish",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-04-30T17:35:16+0900"
     }
   ]
 }
