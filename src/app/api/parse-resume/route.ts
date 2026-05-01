@@ -9,7 +9,7 @@ import type { ParseResumeResponse } from '@/types/api';
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GOOGLE_AI_API_KEY) {
     return NextResponse.json({ error: 'API 키가 설정되지 않았습니다.' }, { status: 500 });
   }
 
@@ -85,6 +85,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json(response, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : '알 수 없는 오류';
+
     const knownMessages = [
       '이력서를 읽을 수 없습니다. 텍스트 기반 PDF를 사용해주세요.',
       '비밀번호로 보호된 PDF는 읽을 수 없습니다. 보호를 해제 후 업로드해주세요.',
@@ -93,6 +94,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (knownMessages.includes(message)) {
       return NextResponse.json({ error: message }, { status: 500 });
     }
+
+    // Anthropic API 크레딧 부족
+    if (message.includes('credit balance is too low')) {
+      return NextResponse.json(
+        { error: 'AI 서비스 크레딧이 부족합니다. 관리자에게 문의해주세요.' },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'AI가 이력서를 분석하는 데 실패했습니다. 잠시 후 다시 시도해주세요.' },
       { status: 500 }

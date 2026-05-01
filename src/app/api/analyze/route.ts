@@ -5,7 +5,7 @@ import { analyzeResumeVsJd } from '@/lib/ai/analyze';
 import type { AnalyzeRequest, AnalyzeResponse } from '@/types/api';
 
 export async function POST(request: Request): Promise<NextResponse> {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GOOGLE_AI_API_KEY) {
     return NextResponse.json({ error: 'API 키가 설정되지 않았습니다.' }, { status: 500 });
   }
 

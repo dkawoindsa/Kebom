@@ -1,11 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { JobRequirements } from '@/types/resume';
 
 function parseJdResponse(text: string): JobRequirements {
   let parsed: unknown;
   try {
-    const cleaned = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-    parsed = JSON.parse(cleaned);
+    parsed = JSON.parse(text);
   } catch {
     throw new Error('AI 응답을 파싱할 수 없습니다.');
   }
@@ -33,96 +32,80 @@ function parseJdResponse(text: string): JobRequirements {
   };
 }
 
-export async function parseJdFromText(jobDescriptionText: string): Promise<JobRequirements> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY가 설정되지 않았습니다.');
-  }
+function createModel(apiKey: string) {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  return genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    systemInstruction: '반드시 JSON 형식으로만 응답하라. 마크다운 코드블록, 설명 텍스트 포함 금지.',
+  });
+}
 
-  const client = new Anthropic({ apiKey });
-
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
-    temperature: 0,
-    system: '반드시 JSON 형식으로만 응답하라. 마크다운 코드블록, 설명 텍스트 포함 금지.',
-    messages: [
-      {
-        role: 'user',
-        content: `아래 채용공고 텍스트를 분석하여 다음 JSON 구조로 반환하라.
-
-반환 JSON 구조:
-{
+const JD_SCHEMA = `{
   "title": "직무명",
   "company": "회사명 (없으면 생략)",
   "requiredSkills": ["필수 스킬1", "필수 스킬2"],
   "preferredSkills": ["우대 스킬1", "우대 스킬2"],
   "responsibilities": ["주요 업무1", "주요 업무2"],
   "rawText": "원본 텍스트 전체"
-}
+}`;
+
+export async function parseJdFromText(jobDescriptionText: string): Promise<JobRequirements> {
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GOOGLE_AI_API_KEY가 설정되지 않았습니다.');
+  }
+
+  const model = createModel(apiKey);
+
+  const prompt = `아래 채용공고 텍스트를 분석하여 다음 JSON 구조로 반환하라.
+
+반환 JSON 구조:
+${JD_SCHEMA}
 
 rawText는 아래 채용공고 원본 텍스트를 그대로 포함시켜라.
 
 채용공고 텍스트:
-${jobDescriptionText}`,
-      },
-    ],
+${jobDescriptionText}`;
+
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0, responseMimeType: 'application/json' },
   });
 
-  const firstBlock = response.content[0];
-  const text = firstBlock?.type === 'text' ? firstBlock.text : '';
-
-  return parseJdResponse(text);
+  return parseJdResponse(result.response.text());
 }
 
 export async function parseJdFromImage(
   imageBuffer: Buffer,
   mediaType: 'image/png' | 'image/jpeg'
 ): Promise<JobRequirements> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY가 설정되지 않았습니다.');
+    throw new Error('GOOGLE_AI_API_KEY가 설정되지 않았습니다.');
   }
 
-  const client = new Anthropic({ apiKey });
+  const model = createModel(apiKey);
   const base64 = imageBuffer.toString('base64');
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
-    temperature: 0,
-    system: '반드시 JSON 형식으로만 응답하라. 마크다운 코드블록, 설명 텍스트 포함 금지.',
-    messages: [
+  const result = await model.generateContent({
+    contents: [
       {
         role: 'user',
-        content: [
+        parts: [
+          { inlineData: { mimeType: mediaType, data: base64 } },
           {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: base64 },
-          },
-          {
-            type: 'text',
             text: `위 채용공고 이미지를 분석하여 다음 JSON 구조로 반환하라.
 
 반환 JSON 구조:
-{
-  "title": "직무명",
-  "company": "회사명 (없으면 생략)",
-  "requiredSkills": ["필수 스킬1", "필수 스킬2"],
-  "preferredSkills": ["우대 스킬1", "우대 스킬2"],
-  "responsibilities": ["주요 업무1", "주요 업무2"],
-  "rawText": "이미지에서 추출한 전체 텍스트"
-}
+${JD_SCHEMA}
 
 rawText는 이미지에서 인식한 텍스트 전체를 그대로 포함시켜라.`,
           },
         ],
       },
     ],
+    generationConfig: { temperature: 0, responseMimeType: 'application/json' },
   });
 
-  const firstBlock = response.content[0];
-  const text = firstBlock?.type === 'text' ? firstBlock.text : '';
-
-  return parseJdResponse(text);
+  return parseJdResponse(result.response.text());
 }
