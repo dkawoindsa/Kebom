@@ -1,10 +1,10 @@
 /**
  * @jest-environment node
  */
-jest.mock('@anthropic-ai/sdk');
+jest.mock('@google/generative-ai');
 
 import { POST } from '@/app/api/analyze/route';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const MOCK_ANALYSIS_JSON = JSON.stringify({
   score: 80,
@@ -39,22 +39,22 @@ function makeRequest(body: unknown): Request {
 }
 
 describe('POST /api/analyze', () => {
-  const originalApiKey = process.env.ANTHROPIC_API_KEY;
-  let mockCreate: jest.Mock;
+  const originalApiKey = process.env.GOOGLE_AI_API_KEY;
+  let mockGenerateContent: jest.Mock;
 
   beforeEach(() => {
-    mockCreate = jest.fn();
-    (Anthropic as jest.Mock).mockImplementation(() => ({
-      messages: { create: mockCreate },
+    mockGenerateContent = jest.fn();
+    (GoogleGenerativeAI as jest.Mock).mockImplementation(() => ({
+      getGenerativeModel: () => ({ generateContent: mockGenerateContent }),
     }));
-    mockCreate.mockResolvedValue({
-      content: [{ type: 'text', text: MOCK_ANALYSIS_JSON }],
+    mockGenerateContent.mockResolvedValue({
+      response: { text: () => MOCK_ANALYSIS_JSON },
     });
-    process.env.ANTHROPIC_API_KEY = 'test-api-key';
+    process.env.GOOGLE_AI_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
-    process.env.ANTHROPIC_API_KEY = originalApiKey;
+    process.env.GOOGLE_AI_API_KEY = originalApiKey;
     jest.clearAllMocks();
   });
 
@@ -88,9 +88,9 @@ describe('POST /api/analyze', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('Anthropic SDK 실패 → 500', async () => {
-    mockCreate.mockReset();
-    mockCreate.mockRejectedValue(new Error('API 오류'));
+  it('Gemini SDK 실패 → 500', async () => {
+    mockGenerateContent.mockReset();
+    mockGenerateContent.mockRejectedValue(new Error('API 오류'));
 
     const res = await POST(
       makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })
@@ -101,8 +101,8 @@ describe('POST /api/analyze', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('ANTHROPIC_API_KEY 미설정 → 500', async () => {
-    delete process.env.ANTHROPIC_API_KEY;
+  it('GOOGLE_AI_API_KEY 미설정 → 500', async () => {
+    delete process.env.GOOGLE_AI_API_KEY;
 
     const res = await POST(
       makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })

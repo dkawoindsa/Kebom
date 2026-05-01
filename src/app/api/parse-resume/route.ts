@@ -9,7 +9,7 @@ import type { ParseResumeResponse } from '@/types/api';
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GOOGLE_AI_API_KEY) {
     return NextResponse.json({ error: 'API 키가 설정되지 않았습니다.' }, { status: 500 });
   }
 
@@ -92,6 +92,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     ];
     if (knownMessages.includes(message)) {
       return NextResponse.json({ error: message }, { status: 500 });
+    }
+    if (message.includes('429') || message.toLowerCase().includes('quota') || message.toLowerCase().includes('rate limit')) {
+      return NextResponse.json(
+        { error: 'API 사용량 한도를 초과했습니다. Google AI Studio에서 결제 설정을 확인하거나 잠시 후 다시 시도해주세요.' },
+        { status: 500 }
+      );
     }
     return NextResponse.json(
       { error: 'AI가 이력서를 분석하는 데 실패했습니다. 잠시 후 다시 시도해주세요.' },

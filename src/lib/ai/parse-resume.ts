@@ -1,22 +1,20 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { ResumeData } from '@/types/resume';
 
 export async function parseResume(pdfText: string): Promise<ResumeData> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY가 설정되지 않았습니다.');
+    throw new Error('GOOGLE_AI_API_KEY가 설정되지 않았습니다.');
   }
 
-  const client = new Anthropic({ apiKey });
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.0-flash',
+    systemInstruction: '반드시 JSON 형식으로만 응답하라. 마크다운 코드블록, 설명 텍스트 포함 금지.',
+    generationConfig: { temperature: 0 },
+  });
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
-    system: '반드시 JSON 형식으로만 응답하라. 마크다운 코드블록, 설명 텍스트 포함 금지.',
-    messages: [
-      {
-        role: 'user',
-        content: `아래 이력서 텍스트를 분석하여 다음 JSON 구조로 반환하라.
+  const result = await model.generateContent(`아래 이력서 텍스트를 분석하여 다음 JSON 구조로 반환하라.
 
 반환 JSON 구조:
 {
@@ -37,13 +35,9 @@ export async function parseResume(pdfText: string): Promise<ResumeData> {
 rawText는 아래 이력서 원본 텍스트를 그대로 포함시켜라.
 
 이력서 텍스트:
-${pdfText}`,
-      },
-    ],
-  });
+${pdfText}`);
 
-  const firstBlock = response.content[0];
-  const text = firstBlock?.type === 'text' ? firstBlock.text : '';
+  const text = result.response.text();
 
   let parsed: unknown;
   try {

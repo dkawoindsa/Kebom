@@ -1,12 +1,12 @@
 /**
  * @jest-environment node
  */
-jest.mock('@anthropic-ai/sdk');
+jest.mock('@google/generative-ai');
 jest.mock('pdf-parse');
 
 import { POST } from '@/app/api/parse-resume/route';
 import { NextRequest } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import pdfParse from 'pdf-parse';
 
 const mockPdfParse = pdfParse as jest.MockedFunction<typeof pdfParse>;
@@ -31,10 +31,6 @@ const MOCK_JD_JSON = JSON.stringify({
   rawText: 'JD 원본 텍스트',
 });
 
-function makeAnthropicResponse(text: string) {
-  return { content: [{ type: 'text', text }] };
-}
-
 function makeRequest(formData: FormData): NextRequest {
   return new NextRequest('http://localhost/api/parse-resume', { method: 'POST', body: formData });
 }
@@ -49,17 +45,17 @@ function makeImageFile(type = 'image/png', sizeBytes = 100): File {
 }
 
 describe('POST /api/parse-resume', () => {
-  const originalApiKey = process.env.ANTHROPIC_API_KEY;
-  let mockCreate: jest.Mock;
+  const originalApiKey = process.env.GOOGLE_AI_API_KEY;
+  let mockGenerateContent: jest.Mock;
 
   beforeEach(() => {
-    mockCreate = jest.fn();
-    (Anthropic as jest.Mock).mockImplementation(() => ({
-      messages: { create: mockCreate },
+    mockGenerateContent = jest.fn();
+    (GoogleGenerativeAI as jest.Mock).mockImplementation(() => ({
+      getGenerativeModel: () => ({ generateContent: mockGenerateContent }),
     }));
-    mockCreate
-      .mockResolvedValueOnce(makeAnthropicResponse(MOCK_RESUME_JSON))
-      .mockResolvedValueOnce(makeAnthropicResponse(MOCK_JD_JSON));
+    mockGenerateContent
+      .mockResolvedValueOnce({ response: { text: () => MOCK_RESUME_JSON } })
+      .mockResolvedValueOnce({ response: { text: () => MOCK_JD_JSON } });
     mockPdfParse.mockResolvedValue({
       text: '이력서 텍스트',
       numpages: 1,
@@ -68,11 +64,11 @@ describe('POST /api/parse-resume', () => {
       metadata: {},
       version: '1.10.100',
     });
-    process.env.ANTHROPIC_API_KEY = 'test-api-key';
+    process.env.GOOGLE_AI_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
-    process.env.ANTHROPIC_API_KEY = originalApiKey;
+    process.env.GOOGLE_AI_API_KEY = originalApiKey;
     jest.clearAllMocks();
   });
 
@@ -171,13 +167,12 @@ describe('POST /api/parse-resume', () => {
     const res = await POST(makeRequest(formData));
 
     expect(res.status).toBe(200);
-    // 텍스트 우선 처리: parseResume + parseJdFromText만 호출 (이미지 파싱 없음)
-    expect(mockCreate).toHaveBeenCalledTimes(2);
+    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
   });
 
-  it('Anthropic SDK 실패 → 500', async () => {
-    mockCreate.mockReset();
-    mockCreate.mockRejectedValue(new Error('API 오류'));
+  it('Gemini SDK 실패 → 500', async () => {
+    mockGenerateContent.mockReset();
+    mockGenerateContent.mockRejectedValue(new Error('API 오류'));
 
     const formData = new FormData();
     formData.append('resume', makePdfFile(), 'resume.pdf');
@@ -190,8 +185,8 @@ describe('POST /api/parse-resume', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('ANTHROPIC_API_KEY 미설정 → 500', async () => {
-    delete process.env.ANTHROPIC_API_KEY;
+  it('GOOGLE_AI_API_KEY 미설정 → 500', async () => {
+    delete process.env.GOOGLE_AI_API_KEY;
 
     const formData = new FormData();
     formData.append('resume', makePdfFile(), 'resume.pdf');
