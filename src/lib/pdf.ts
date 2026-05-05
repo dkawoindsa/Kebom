@@ -1,5 +1,6 @@
 // 서버 전용 — 이 파일은 app/api/ 라우트에서만 import한다
-import pdfParse from 'pdf-parse';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>;
 
 export async function extractTextFromPdf(buffer: Buffer): Promise<string> {
   const result = await pdfParse(buffer);

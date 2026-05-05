@@ -9,10 +9,6 @@ import type { ParseResumeResponse } from '@/types/api';
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  if (!process.env.GOOGLE_AI_API_KEY) {
-    return NextResponse.json({ error: 'API 키가 설정되지 않았습니다.' }, { status: 500 });
-  }
-
   let formData: FormData;
   try {
     formData = await req.formData();
@@ -84,6 +80,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(response, { status: 200 });
   } catch (err) {
+    console.error('[parse-resume] error:', err);
     const message = err instanceof Error ? err.message : '알 수 없는 오류';
     const knownMessages = [
       '이력서를 읽을 수 없습니다. 텍스트 기반 PDF를 사용해주세요.',
@@ -91,11 +88,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       'PDF 파일이 손상되어 읽을 수 없습니다. 다른 파일을 사용해주세요.',
     ];
     if (knownMessages.includes(message)) {
-      return NextResponse.json({ error: message }, { status: 500 });
+      return NextResponse.json({ error: message }, { status: 400 });
     }
-    if (message.includes('429') || message.toLowerCase().includes('quota') || message.toLowerCase().includes('rate limit')) {
+    if (message.includes('Ollama 요청 실패') || message.includes('ECONNREFUSED')) {
       return NextResponse.json(
-        { error: 'API 사용량 한도를 초과했습니다. Google AI Studio에서 결제 설정을 확인하거나 잠시 후 다시 시도해주세요.' },
+        { error: 'Ollama 서버에 연결할 수 없습니다. Ollama가 실행 중인지 확인해주세요.' },
         { status: 500 }
       );
     }

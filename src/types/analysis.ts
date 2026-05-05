@@ -20,6 +20,8 @@ export interface MagicFix {
 
 export interface AnalysisResult {
   score: number;
+  scoreReason: string;
+  experienceSummary: string;
   skillMatches: SkillMatch[];
   interviewQuestions: DangerQuestion[];
   magicFixes: MagicFix[];

@@ -34,10 +34,18 @@ async function fetchAnalyze(
   return data.result;
 }
 
-function ParsingSkeletonUI() {
+function ParsingSkeletonUI({ progress }: { progress: number }) {
   return (
     <div className="animate-pulse space-y-6">
-      <p className="text-sm text-neutral-400">이력서와 공고를 읽고 있어요...</p>
+      <div className="space-y-1">
+        <p className="text-sm text-neutral-400">이력서와 공고를 읽고 있어요...</p>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 bg-neutral-800 rounded-full h-1">
+            <div className="bg-white h-1 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+          <span className="text-xs text-neutral-500 tabular-nums w-8 text-right">{Math.round(progress)}%</span>
+        </div>
+      </div>
       <div className="space-y-2">
         <div className="h-3 w-24 rounded bg-[#1f1f1f]" />
         <div className="mt-2 space-y-2">
@@ -68,14 +76,20 @@ function ParsingSkeletonUI() {
   );
 }
 
-function AnalyzingSkeletonUI({ showSlowHint }: { showSlowHint: boolean }) {
+function AnalyzingSkeletonUI({ showSlowHint, progress }: { showSlowHint: boolean; progress: number }) {
   return (
     <div className="animate-pulse space-y-4">
-      <div>
+      <div className="space-y-1">
         <p className="text-sm text-neutral-400">강점과 약점을 분석하고 있어요...</p>
         {showSlowHint && (
-          <p className="mt-1 text-xs text-neutral-500">(시간이 더 걸릴 수 있어요)</p>
+          <p className="text-xs text-neutral-500">(시간이 더 걸릴 수 있어요)</p>
         )}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 bg-neutral-800 rounded-full h-1">
+            <div className="bg-white h-1 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+          <span className="text-xs text-neutral-500 tabular-nums w-8 text-right">{Math.round(progress)}%</span>
+        </div>
       </div>
       <div className="h-16 w-16 rounded-full bg-[#1f1f1f]" />
       <div className="space-y-3">
@@ -106,6 +120,19 @@ function AnalyzingSkeletonUI({ showSlowHint }: { showSlowHint: boolean }) {
 export default function WizardShell() {
   const [state, dispatch] = useReducer(wizardReducer, initialState);
   const [showSlowHint, setShowSlowHint] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (state.loading === 'idle') {
+      setProgress(0);
+      return;
+    }
+    setProgress(0);
+    const id = setInterval(() => {
+      setProgress((prev) => prev + (90 - prev) * 0.08);
+    }, 500);
+    return () => clearInterval(id);
+  }, [state.loading]);
 
   useEffect(() => {
     if (state.loading !== 'analyzing') {
@@ -199,9 +226,9 @@ export default function WizardShell() {
   let content: React.ReactNode;
 
   if (state.loading === 'parsing') {
-    content = <ParsingSkeletonUI />;
+    content = <ParsingSkeletonUI progress={progress} />;
   } else if (state.loading === 'analyzing') {
-    content = <AnalyzingSkeletonUI showSlowHint={showSlowHint} />;
+    content = <AnalyzingSkeletonUI showSlowHint={showSlowHint} progress={progress} />;
   } else if (state.step === 'upload') {
     content = <StepUpload onSubmit={handleParseSubmit} loading={state.loading} error={state.error} />;
   } else if (state.step === 'read') {

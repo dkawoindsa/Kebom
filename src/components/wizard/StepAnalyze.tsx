@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import SkillBadge from '@/components/ui/SkillBadge';
 import type { AnalysisResult, SkillMatch } from '@/types/analysis';
 
@@ -22,8 +22,15 @@ function sortSkillMatches(matches: SkillMatch[]): SkillMatch[] {
 
 function SkillRow({ match }: { match: SkillMatch }) {
   const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
   const text = match.status === 'match' ? match.evidence : (match.suggestion ?? match.evidence);
   const hasText = !!text;
+
+  useEffect(() => {
+    const el = textRef.current;
+    if (el) setOverflows(el.scrollHeight > el.clientHeight);
+  }, []);
 
   return (
     <div className="flex items-start gap-3 py-2 border-b border-neutral-800/60 last:border-0">
@@ -31,17 +38,19 @@ function SkillRow({ match }: { match: SkillMatch }) {
       <SkillBadge skill={match.skill} status={match.status} />
       {hasText && (
         <div className="flex-1 min-w-0">
-          <p className={`text-xs text-neutral-500 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
+          <p ref={textRef} className={`text-xs text-neutral-500 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
             {text}
           </p>
-          <button
-            type="button"
-            onClick={() => setExpanded((prev) => !prev)}
-            aria-expanded={expanded}
-            className="text-neutral-500 text-xs hover:text-neutral-300 transition-colors mt-1"
-          >
-            {expanded ? '접기' : '더 보기'}
-          </button>
+          {overflows && (
+            <button
+              type="button"
+              onClick={() => setExpanded((prev) => !prev)}
+              aria-expanded={expanded}
+              className="text-neutral-500 text-xs hover:text-neutral-300 transition-colors mt-1"
+            >
+              {expanded ? '접기' : '더 보기'}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -49,7 +58,7 @@ function SkillRow({ match }: { match: SkillMatch }) {
 }
 
 export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
-  const { score, skillMatches } = analysisResult;
+  const { score, scoreReason, experienceSummary, skillMatches } = analysisResult;
   const scoreColor = getScoreColor(score);
   const sorted = sortSkillMatches(skillMatches);
 
@@ -57,7 +66,7 @@ export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
     <div className="space-y-6">
       {/* Score */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">MATCH SCORE</p>
+        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">매칭 점수</p>
         <div className="flex items-center gap-3">
           <div
             aria-label={`매칭 점수 ${score}점 / 100점`}
@@ -68,11 +77,22 @@ export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
           </div>
           <span className="text-xs text-neutral-500">/ 100점</span>
         </div>
+        {scoreReason && (
+          <p className="text-sm text-neutral-400 leading-relaxed">{scoreReason}</p>
+        )}
       </div>
+
+      {/* Experience Summary */}
+      {experienceSummary && (
+        <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
+          <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">경험 요약</p>
+          <p className="text-sm text-neutral-300 leading-relaxed">{experienceSummary}</p>
+        </div>
+      )}
 
       {/* Heatmap */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">SKILL MATCH</p>
+        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">스킬 매칭</p>
         {sorted.length === 0 ? (
           <p className="text-sm text-neutral-500">분석된 스킬 매칭 결과가 없습니다.</p>
         ) : (

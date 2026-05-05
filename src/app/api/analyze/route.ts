@@ -5,10 +5,6 @@ import { analyzeResumeVsJd } from '@/lib/ai/analyze';
 import type { AnalyzeRequest, AnalyzeResponse } from '@/types/api';
 
 export async function POST(request: Request): Promise<NextResponse> {
-  if (!process.env.GOOGLE_AI_API_KEY) {
-    return NextResponse.json({ error: 'API 키가 설정되지 않았습니다.' }, { status: 500 });
-  }
-
   let body: AnalyzeRequest;
   try {
     body = (await request.json()) as AnalyzeRequest;
@@ -30,9 +26,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(response, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : '';
-    if (message.includes('429') || message.toLowerCase().includes('quota') || message.toLowerCase().includes('rate limit')) {
+    if (message.includes('Ollama 요청 실패') || message.includes('ECONNREFUSED')) {
       return NextResponse.json(
-        { error: 'API 사용량 한도를 초과했습니다. Google AI Studio에서 결제 설정을 확인하거나 잠시 후 다시 시도해주세요.' },
+        { error: 'Ollama 서버에 연결할 수 없습니다. Ollama가 실행 중인지 확인해주세요.' },
         { status: 500 }
       );
     }

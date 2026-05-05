@@ -1,29 +1,20 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ResumeData, JobRequirements } from "@/types/resume";
-import type { AnalysisResult } from "@/types/analysis";
+import { ollamaChat } from './ollama';
+import type { ResumeData, JobRequirements } from '@/types/resume';
+import type { AnalysisResult } from '@/types/analysis';
 
 export async function analyzeResumeVsJd(
-  resume: Omit<ResumeData, "rawText">,
-  jd: Omit<JobRequirements, "rawText">,
+  resume: Omit<ResumeData, 'rawText'>,
+  jd: Omit<JobRequirements, 'rawText'>,
 ): Promise<AnalysisResult> {
-  const apiKey = process.env.GOOGLE_AI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GOOGLE_AI_API_KEY가 설정되지 않았습니다.");
-  }
+  const text = await ollamaChat(`당신은 10년 이상의 기술 채용 경험을 가진 시니어 HR 전문가입니다. 이력서와 채용공고를 전문가적 시각으로 분석하여 지원자의 합격 가능성과 개선 포인트를 정확하게 평가합니다.
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
-    systemInstruction:
-      "반드시 JSON 형식으로만 응답하라. 마크다운 코드블록, 설명 텍스트 포함 금지.",
-  });
-
-  const result =
-    await model.generateContent(`아래 이력서와 채용공고를 비교 분석하여 다음 JSON 구조로 반환하라.
+아래 이력서와 채용공고를 비교 분석하여 다음 JSON 구조로 반환하라.
 
 반환 JSON 구조:
 {
   "score": 0-100 정수 (이력서와 공고의 전체 매칭 점수),
+  "scoreReason": "해당 점수인 이유 (한국어 2-3문장, 핵심 강점과 부족한 점 포함)",
+  "experienceSummary": "이력서의 주요 프로젝트·경험 요약 (한국어 2-4문장, '~~ 프로젝트에서 ~~ 경험' 형식)",
   "skillMatches": [
     {
       "skill": "스킬명",
@@ -58,38 +49,33 @@ ${JSON.stringify(resume)}
 채용공고:
 ${JSON.stringify(jd)}`);
 
-  const text = result.response.text();
-
   let parsed: unknown;
   try {
-    const cleaned = text
-      .replace(/^```(?:json)?\n?/, "")
-      .replace(/\n?```$/, "")
-      .trim();
+    const cleaned = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new Error("AI 응답을 파싱할 수 없습니다.");
+    throw new Error('AI 응답을 파싱할 수 없습니다.');
   }
 
   if (
-    typeof parsed !== "object" ||
+    typeof parsed !== 'object' ||
     parsed === null ||
-    !Array.isArray((parsed as Record<string, unknown>)["skillMatches"]) ||
-    !Array.isArray((parsed as Record<string, unknown>)["interviewQuestions"]) ||
-    !Array.isArray((parsed as Record<string, unknown>)["magicFixes"])
+    !Array.isArray((parsed as Record<string, unknown>)['skillMatches']) ||
+    !Array.isArray((parsed as Record<string, unknown>)['interviewQuestions']) ||
+    !Array.isArray((parsed as Record<string, unknown>)['magicFixes'])
   ) {
-    throw new Error("AI 응답에 필수 필드가 없습니다.");
+    throw new Error('AI 응답에 필수 필드가 없습니다.');
   }
 
   const data = parsed as Record<string, unknown>;
-  const score = Math.min(100, Math.max(0, Number(data["score"] ?? 0)));
+  const score = Math.min(100, Math.max(0, Number(data['score'] ?? 0)));
 
   return {
     score,
-    skillMatches: data["skillMatches"] as AnalysisResult["skillMatches"],
-    interviewQuestions: data[
-      "interviewQuestions"
-    ] as AnalysisResult["interviewQuestions"],
-    magicFixes: data["magicFixes"] as AnalysisResult["magicFixes"],
+    scoreReason: typeof data['scoreReason'] === 'string' ? data['scoreReason'] : '',
+    experienceSummary: typeof data['experienceSummary'] === 'string' ? data['experienceSummary'] : '',
+    skillMatches: data['skillMatches'] as AnalysisResult['skillMatches'],
+    interviewQuestions: data['interviewQuestions'] as AnalysisResult['interviewQuestions'],
+    magicFixes: data['magicFixes'] as AnalysisResult['magicFixes'],
   };
 }

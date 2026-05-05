@@ -207,17 +207,17 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <div className="space-y-3">
           {draft.experience.map((exp, i) => (
             <div key={i} className="rounded bg-[#1a1a1a] border border-neutral-800/60 p-4 space-y-3">
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => handleDeleteExperience(i)}
-                  className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
-                >
-                  삭제
-                </button>
-              </div>
               <div className="space-y-1">
-                <p className="text-xs text-neutral-500">회사</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-neutral-500">회사</p>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExperience(i)}
+                    className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+                  >
+                    삭제
+                  </button>
+                </div>
                 <EditableField
                   value={exp.company}
                   onChange={(v) => handleUpdateExperience(i, 'company', v)}
@@ -273,17 +273,17 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <div className="space-y-3">
           {draft.education.map((edu, i) => (
             <div key={i} className="rounded bg-[#1a1a1a] border border-neutral-800/60 p-4 space-y-3">
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => handleDeleteEducation(i)}
-                  className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
-                >
-                  삭제
-                </button>
-              </div>
               <div className="space-y-1">
-                <p className="text-xs text-neutral-500">학교</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-neutral-500">학교</p>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteEducation(i)}
+                    className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+                  >
+                    삭제
+                  </button>
+                </div>
                 <EditableField
                   value={edu.institution}
                   onChange={(v) => handleUpdateEducation(i, 'institution', v)}

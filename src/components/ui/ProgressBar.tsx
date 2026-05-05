@@ -25,11 +25,11 @@ export default function ProgressBar({ step, loading }: ProgressBarProps) {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span className={labelClass(readActive, readDone)}>1 Read</span>
+      <span className={labelClass(readActive, readDone)}>1 읽기</span>
       <span className="text-neutral-700">→</span>
-      <span className={labelClass(analyzeActive, analyzeDone)}>2 Analyze</span>
+      <span className={labelClass(analyzeActive, analyzeDone)}>2 분석</span>
       <span className="text-neutral-700">→</span>
-      <span className={labelClass(actionActive, false)}>3 Action</span>
+      <span className={labelClass(actionActive, false)}>3 결과</span>
     </div>
   );
 }
