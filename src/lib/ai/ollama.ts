@@ -2,7 +2,7 @@ const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
 export const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen2.5:7b';
 export const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL ?? '';
 
-const SYSTEM_PROMPT = '반드시 JSON 형식으로만 응답하라. 마크다운 코드블록, 설명 텍스트 포함 금지.';
+const SYSTEM_PROMPT = '반드시 JSON 형식으로만 응답하라. 마크다운 코드블록, 설명 텍스트 포함 금지. JSON 내 모든 텍스트 값은 반드시 한국어로 작성하라. 중국어, 일본어 등 다른 언어 사용 절대 금지.';
 
 export async function ollamaChat(userPrompt: string, model = OLLAMA_MODEL): Promise<string> {
   const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {

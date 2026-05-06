@@ -60,7 +60,7 @@ function SkillRow({ match }: { match: SkillMatch }) {
 export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
   const { score, scoreReason, experienceSummary, skillMatches } = analysisResult;
   const scoreColor = getScoreColor(score);
-  const sorted = sortSkillMatches(skillMatches);
+  const sorted = sortSkillMatches(skillMatches).slice(0, 5);
 
   return (
     <div className="space-y-6">

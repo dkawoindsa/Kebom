@@ -72,7 +72,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="text-neutral-500 text-xs hover:text-neutral-300 transition-colors shrink-0 self-start mt-0.5"
+      className="cursor-pointer text-neutral-500 text-xs hover:text-neutral-300 transition-colors shrink-0 self-start mt-0.5"
     >
       {copied ? '✓' : '📋'}
     </button>

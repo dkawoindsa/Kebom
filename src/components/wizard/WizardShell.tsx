@@ -78,7 +78,7 @@ function ParsingSkeletonUI({ progress }: { progress: number }) {
 
 function AnalyzingSkeletonUI({ showSlowHint, progress }: { showSlowHint: boolean; progress: number }) {
   return (
-    <div className="animate-pulse space-y-4">
+    <div className="animate-pulse space-y-6">
       <div className="space-y-1">
         <p className="text-sm text-neutral-400">강점과 약점을 분석하고 있어요...</p>
         {showSlowHint && (
@@ -91,27 +91,37 @@ function AnalyzingSkeletonUI({ showSlowHint, progress }: { showSlowHint: boolean
           <span className="text-xs text-neutral-500 tabular-nums w-8 text-right">{Math.round(progress)}%</span>
         </div>
       </div>
-      <div className="h-16 w-16 rounded-full bg-[#1f1f1f]" />
-      <div className="space-y-3">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <div className="h-4 w-32 rounded bg-[#1f1f1f]" />
-            <div className="h-6 w-16 rounded bg-[#1f1f1f]" />
-            <div className="h-4 w-48 rounded bg-[#1f1f1f]" />
-          </div>
-        ))}
+      <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
+        <div className="h-3 w-20 rounded bg-[#1f1f1f]" />
+        <div className="flex items-center gap-3">
+          <div className="h-16 w-16 rounded-full bg-[#1f1f1f] shrink-0" />
+          <div className="h-4 w-8 rounded bg-[#1f1f1f]" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-3 w-full rounded bg-[#1f1f1f]" />
+          <div className="h-3 w-5/6 rounded bg-[#1f1f1f]" />
+          <div className="h-3 w-4/6 rounded bg-[#1f1f1f]" />
+        </div>
       </div>
-      <div className="space-y-2">
-        <div className="h-3 w-24 rounded bg-[#1f1f1f]" />
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="mt-3 h-20 w-full rounded-lg bg-[#1f1f1f]" />
-        ))}
+      <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
+        <div className="h-3 w-20 rounded bg-[#1f1f1f]" />
+        <div className="space-y-2">
+          <div className="h-3 w-full rounded bg-[#1f1f1f]" />
+          <div className="h-3 w-11/12 rounded bg-[#1f1f1f]" />
+          <div className="h-3 w-4/5 rounded bg-[#1f1f1f]" />
+        </div>
       </div>
-      <div className="space-y-2">
+      <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
         <div className="h-3 w-24 rounded bg-[#1f1f1f]" />
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="mt-3 h-28 w-full rounded-lg bg-[#1f1f1f]" />
-        ))}
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-3 py-2 border-b border-neutral-800/60 last:border-0">
+              <div className="h-4 w-32 rounded bg-[#1f1f1f] shrink-0" />
+              <div className="h-5 w-16 rounded bg-[#1f1f1f] shrink-0" />
+              <div className="h-4 w-48 rounded bg-[#1f1f1f]" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
