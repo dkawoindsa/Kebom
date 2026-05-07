@@ -1,4 +1,5 @@
 import { ollamaChat, ollamaChatWithImage } from './ollama';
+import { extractSkillsFromText } from './parse-resume';
 import type { JobRequirements } from '@/types/resume';
 
 const JD_KEY_MAP: Record<string, string> = {
@@ -55,13 +56,24 @@ function parseJdResponse(text: string, originalInput: string): JobRequirements {
     // AI 응답 파싱 실패 시 빈 data로 fallback
   }
 
+  const requiredSkills = toStringArray(data['requiredSkills']);
+  const aiPreferred = toStringArray(data['preferredSkills']);
+
+  const dictSkills = extractSkillsFromText(originalInput);
+  const covered = new Set([
+    ...requiredSkills.map((s) => s.toLowerCase()),
+    ...aiPreferred.map((s) => s.toLowerCase()),
+  ]);
+  const extraSkills = dictSkills.filter((s) => !covered.has(s.toLowerCase()));
+  const preferredSkills = [...aiPreferred, ...extraSkills];
+
   return {
     title: typeof data['title'] === 'string' && data['title'].trim().length > 0
       ? data['title'].trim()
       : '',
     company: typeof data['company'] === 'string' ? data['company'] : undefined,
-    requiredSkills: toStringArray(data['requiredSkills']),
-    preferredSkills: toStringArray(data['preferredSkills']),
+    requiredSkills,
+    preferredSkills,
     responsibilities: toStringArray(data['responsibilities']),
     rawText: typeof data['rawText'] === 'string' && data['rawText'].trim().length > 0
       ? data['rawText']

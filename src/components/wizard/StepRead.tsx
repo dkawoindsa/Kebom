@@ -58,6 +58,24 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
     });
   }
 
+  function handleAddProject() {
+    const item: ExperienceItem = { company: '', role: '', period: '', description: '' };
+    setDraft((prev) => ({ ...prev, projects: [...(prev.projects ?? []), item] }));
+  }
+
+  function handleDeleteProject(index: number) {
+    setDraft((prev) => ({ ...prev, projects: (prev.projects ?? []).filter((_, i) => i !== index) }));
+  }
+
+  function handleUpdateProject(index: number, field: keyof ExperienceItem, value: string) {
+    setDraft((prev) => {
+      const updated = (prev.projects ?? []).map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      );
+      return { ...prev, projects: updated };
+    });
+  }
+
   function handleAddEducation() {
     const item: EducationItem = { institution: '', degree: '', period: '' };
     setDraft((prev) => ({ ...prev, education: [...prev.education, item] }));
@@ -86,10 +104,10 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         </div>
       )}
 
-      {draft.skills.length === 0 && draft.experience.length === 0 && (
+      {draft.skills.length === 0 && draft.experience.length === 0 && (draft.projects ?? []).length === 0 && (
         <div className="rounded bg-amber-500/10 border border-amber-500/20 px-3 py-2">
           <p className="text-xs text-amber-400">
-            이력서에서 경력 또는 스킬 정보를 찾을 수 없습니다. 직접 추가해주세요.
+            이력서에서 경력·프로젝트 또는 스킬 정보를 찾을 수 없습니다. 직접 추가해주세요.
           </p>
         </div>
       )}
@@ -263,6 +281,72 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
           className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
         >
           경력 추가
+        </button>
+      </div>
+
+      {/* 프로젝트 */}
+      <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
+        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">프로젝트</p>
+
+        <div className="space-y-3">
+          {(draft.projects ?? []).map((proj, i) => (
+            <div key={i} className="rounded bg-[#1a1a1a] border border-neutral-800/60 p-4 space-y-3">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-neutral-500">프로젝트명</p>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteProject(i)}
+                    className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+                  >
+                    삭제
+                  </button>
+                </div>
+                <EditableField
+                  value={proj.company}
+                  onChange={(v) => handleUpdateProject(i, 'company', v)}
+                  label={`프로젝트 ${i + 1} 이름`}
+                  placeholder="프로젝트명"
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-neutral-500">역할</p>
+                <EditableField
+                  value={proj.role}
+                  onChange={(v) => handleUpdateProject(i, 'role', v)}
+                  label={`프로젝트 ${i + 1} 역할`}
+                  placeholder="담당 역할/포지션"
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-neutral-500">기간</p>
+                <EditableField
+                  value={proj.period}
+                  onChange={(v) => handleUpdateProject(i, 'period', v)}
+                  label={`프로젝트 ${i + 1} 기간`}
+                  placeholder="예: 2023.06 - 2023.12"
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-neutral-500">설명</p>
+                <EditableField
+                  value={proj.description}
+                  onChange={(v) => handleUpdateProject(i, 'description', v)}
+                  label={`프로젝트 ${i + 1} 설명`}
+                  multiline
+                  placeholder="주요 구현 기능 및 성과"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAddProject}
+          className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+        >
+          프로젝트 추가
         </button>
       </div>
 

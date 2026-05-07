@@ -24,7 +24,14 @@ function SkillRow({ match }: { match: SkillMatch }) {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
-  const text = match.status === 'match' ? match.evidence : (match.suggestion ?? match.evidence);
+  const rawText = match.status === 'match' ? match.evidence : (match.suggestion ?? match.evidence);
+  const fallback =
+    match.status === 'missing'
+      ? '해당 스킬이나 경험이 이력서에서 확인되지 않습니다.'
+      : match.status === 'partial'
+      ? '이력서에서 일부 경험은 있으나 심화 경험이 더 필요합니다.'
+      : undefined;
+  const text = rawText ?? fallback;
   const hasText = !!text;
 
   useEffect(() => {
@@ -34,7 +41,6 @@ function SkillRow({ match }: { match: SkillMatch }) {
 
   return (
     <div className="flex items-start gap-3 py-2 border-b border-neutral-800/60 last:border-0">
-      <span className="w-32 shrink-0 font-mono text-sm text-neutral-300 truncate">{match.skill}</span>
       <SkillBadge skill={match.skill} status={match.status} />
       {hasText && (
         <div className="flex-1 min-w-0">
@@ -58,9 +64,12 @@ function SkillRow({ match }: { match: SkillMatch }) {
 }
 
 export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
-  const { score, scoreReason, experienceSummary, skillMatches } = analysisResult;
+  const { score, scoreReason, skillMatches } = analysisResult;
   const scoreColor = getScoreColor(score);
-  const sorted = sortSkillMatches(skillMatches).slice(0, 5);
+  const sorted = sortSkillMatches(skillMatches);
+  const matchCount = skillMatches.filter((m) => m.status === 'match').length;
+  const partialCount = skillMatches.filter((m) => m.status === 'partial').length;
+  const missingCount = skillMatches.filter((m) => m.status === 'missing').length;
 
   return (
     <div className="space-y-6">
@@ -82,17 +91,18 @@ export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
         )}
       </div>
 
-      {/* Experience Summary */}
-      {experienceSummary && (
-        <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-          <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">경험 요약</p>
-          <p className="text-sm text-neutral-300 leading-relaxed">{experienceSummary}</p>
-        </div>
-      )}
-
       {/* Heatmap */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">스킬 매칭</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">스킬 매칭</p>
+          {sorted.length > 0 && (
+            <div className="flex gap-3 text-xs">
+              <span className="text-green-400">{matchCount} 매칭</span>
+              <span className="text-amber-400">{partialCount} 일부 일치</span>
+              <span className="text-red-400">{missingCount} 부족</span>
+            </div>
+          )}
+        </div>
         {sorted.length === 0 ? (
           <p className="text-sm text-neutral-500">분석된 스킬 매칭 결과가 없습니다.</p>
         ) : (

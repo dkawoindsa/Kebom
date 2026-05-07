@@ -1,16 +1,23 @@
 /**
  * @jest-environment node
  */
-jest.mock('@google/generative-ai');
+jest.mock('@/lib/ai/ollama');
 
 import { POST } from '@/app/api/analyze/route';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ollamaChat } from '@/lib/ai/ollama';
+
+const mockOllamaChat = ollamaChat as jest.Mock;
 
 const MOCK_ANALYSIS_JSON = JSON.stringify({
   score: 80,
-  skillMatches: [{ skill: 'TypeScript', status: 'match', evidence: '이력서에서 발견' }],
+  scoreReason: '좋은 매칭입니다.',
+  skillMatches: [
+    { skill: 'TypeScript', status: 'match', evidence: '이력서에서 발견' },
+    { skill: 'Node.js', status: 'partial', suggestion: '심화 경험 추가 필요' },
+    { skill: 'Docker', status: 'missing', suggestion: 'Docker 학습 권장' },
+  ],
   interviewQuestions: [{ question: 'TypeScript 경험은?', advice: '구체적으로 답하세요.' }],
-  magicFixes: [{ original: '기존 문장', revised: '개선된 문장', reason: '키워드 추가' }],
+  gapSuggestions: [{ jobRequirement: 'Docker 컨테이너 운영', recommendation: '채용공고에서 요구하는 Docker 컨테이너 운영이(가) 이력서에서 확인되지 않습니다. 관련 경험을 추가하면 경쟁력이 높아질 것입니다.' }],
 });
 
 const MOCK_RESUME_DATA = {
@@ -39,22 +46,11 @@ function makeRequest(body: unknown): Request {
 }
 
 describe('POST /api/analyze', () => {
-  const originalApiKey = process.env.GOOGLE_AI_API_KEY;
-  let mockGenerateContent: jest.Mock;
-
   beforeEach(() => {
-    mockGenerateContent = jest.fn();
-    (GoogleGenerativeAI as jest.Mock).mockImplementation(() => ({
-      getGenerativeModel: () => ({ generateContent: mockGenerateContent }),
-    }));
-    mockGenerateContent.mockResolvedValue({
-      response: { text: () => MOCK_ANALYSIS_JSON },
-    });
-    process.env.GOOGLE_AI_API_KEY = 'test-api-key';
+    mockOllamaChat.mockResolvedValue(MOCK_ANALYSIS_JSON);
   });
 
   afterEach(() => {
-    process.env.GOOGLE_AI_API_KEY = originalApiKey;
     jest.clearAllMocks();
   });
 
@@ -69,7 +65,19 @@ describe('POST /api/analyze', () => {
     expect(typeof body.result.score).toBe('number');
     expect(Array.isArray(body.result.skillMatches)).toBe(true);
     expect(Array.isArray(body.result.interviewQuestions)).toBe(true);
-    expect(Array.isArray(body.result.magicFixes)).toBe(true);
+    expect(Array.isArray(body.result.gapSuggestions)).toBe(true);
+  });
+
+  it('skillMatches에 JD 스킬이 모두 포함된다', async () => {
+    const res = await POST(
+      makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })
+    );
+
+    const body = await res.json();
+    const skills = (body.result.skillMatches as { skill: string }[]).map((m) => m.skill.toLowerCase());
+    expect(skills).toContain('typescript');
+    expect(skills).toContain('node.js');
+    expect(skills).toContain('docker');
   });
 
   it('resumeData 없음 → 400', async () => {
@@ -88,9 +96,8 @@ describe('POST /api/analyze', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('Gemini SDK 실패 → 500', async () => {
-    mockGenerateContent.mockReset();
-    mockGenerateContent.mockRejectedValue(new Error('API 오류'));
+  it('Ollama 실패 → 500', async () => {
+    mockOllamaChat.mockRejectedValue(new Error('Ollama 요청 실패 (500): 서버 오류'));
 
     const res = await POST(
       makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })
@@ -101,8 +108,8 @@ describe('POST /api/analyze', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('GOOGLE_AI_API_KEY 미설정 → 500', async () => {
-    delete process.env.GOOGLE_AI_API_KEY;
+  it('Ollama 연결 불가 → 500', async () => {
+    mockOllamaChat.mockRejectedValue(new Error('ECONNREFUSED'));
 
     const res = await POST(
       makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })

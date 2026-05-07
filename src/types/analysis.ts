@@ -12,10 +12,9 @@ export interface DangerQuestion {
   advice: string;
 }
 
-export interface MagicFix {
-  original: string;
-  revised: string;
-  reason: string;
+export interface GapSuggestion {
+  jobRequirement: string;
+  recommendation: string;
 }
 
 export interface AnalysisResult {
@@ -24,5 +23,5 @@ export interface AnalysisResult {
   experienceSummary: string;
   skillMatches: SkillMatch[];
   interviewQuestions: DangerQuestion[];
-  magicFixes: MagicFix[];
+  gapSuggestions: GapSuggestion[];
 }

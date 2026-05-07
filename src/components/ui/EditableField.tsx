@@ -19,7 +19,7 @@ export default function EditableField({
 }: EditableFieldProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const viewRef = useRef<HTMLElement>(null);
+  const viewRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -28,6 +28,7 @@ export default function EditableField({
     if (multiline) {
       const el = textareaRef.current;
       if (el) {
+        autoResize(el);
         el.focus();
         el.setSelectionRange(el.value.length, el.value.length);
       }
@@ -57,6 +58,11 @@ export default function EditableField({
     viewRef.current?.focus();
   }
 
+  function autoResize(el: HTMLTextAreaElement) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
   if (editing) {
     const sharedClass =
       'rounded-lg bg-[#0a0a0a] border border-neutral-600 px-4 py-3 text-sm text-neutral-300 focus:outline-none w-full';
@@ -65,8 +71,9 @@ export default function EditableField({
       return (
         <textarea
           ref={textareaRef}
+          rows={3}
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => { setDraft(e.target.value); autoResize(e.target); }}
           onKeyDown={(e) => {
             if (e.key === 'Escape') { e.preventDefault(); cancel(); }
             if (e.key === 'Tab') { e.preventDefault(); save(); }
@@ -75,7 +82,7 @@ export default function EditableField({
           aria-label={label}
           aria-multiline="true"
           placeholder={placeholder}
-          className={sharedClass}
+          className={`${sharedClass} resize-none overflow-hidden`}
         />
       );
     }
@@ -100,8 +107,8 @@ export default function EditableField({
   }
 
   return (
-    <span
-      ref={viewRef as React.RefObject<HTMLSpanElement>}
+    <div
+      ref={viewRef}
       role="button"
       tabIndex={0}
       aria-label={label}
@@ -109,9 +116,18 @@ export default function EditableField({
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); }
       }}
-      className="text-sm text-neutral-300 cursor-pointer hover:text-white transition-colors"
+      className="flex items-start justify-between gap-2 cursor-pointer group"
     >
-      {value || <span className="text-neutral-500">{placeholder}</span>}
-    </span>
+      <span className="text-sm text-neutral-300 group-hover:text-white transition-colors">
+        {value || <span className="text-neutral-500">{placeholder}</span>}
+      </span>
+      <span
+        className="material-symbols-outlined shrink-0 select-none text-neutral-600 group-hover:text-neutral-400 transition-colors"
+        style={{ fontSize: '16px', lineHeight: '20px', fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20" }}
+        aria-hidden="true"
+      >
+        stylus
+      </span>
+    </div>
   );
 }

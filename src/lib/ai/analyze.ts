@@ -1,11 +1,25 @@
 import { ollamaChat } from './ollama';
 import type { ResumeData, JobRequirements } from '@/types/resume';
-import type { AnalysisResult } from '@/types/analysis';
+import type { AnalysisResult, SkillStatus } from '@/types/analysis';
+
+const VALID_STATUSES = new Set<string>(['match', 'partial', 'missing']);
+
+function isJsonLike(s: string): boolean {
+  const t = s.trim();
+  return t.startsWith('{') || t.startsWith('[') || t.startsWith('"skills"') || t.startsWith('"skill"');
+}
 
 export async function analyzeResumeVsJd(
   resume: Omit<ResumeData, 'rawText'>,
   jd: Omit<JobRequirements, 'rawText'>,
 ): Promise<AnalysisResult> {
+  const allJdSkills = [...jd.requiredSkills, ...jd.preferredSkills];
+  const seenLower = new Set(allJdSkills.map((s) => s.toLowerCase().trim()));
+  const extraResumeSkills = (resume.skills ?? []).filter(
+    (s) => !seenLower.has(s.toLowerCase().trim()),
+  );
+  const allSkills = [...allJdSkills, ...extraResumeSkills];
+
   const text = await ollamaChat(`중요: scoreReason, experienceSummary, advice, reason 등 모든 텍스트 값은 반드시 한국어로 작성하라. 중국어·일본어 사용 절대 금지.
 
 당신은 10년 이상의 기술 채용 경험을 가진 시니어 HR 전문가입니다. 이력서와 채용공고를 전문가적 시각으로 분석하여 지원자의 합격 가능성과 개선 포인트를 정확하게 평가합니다.
@@ -30,30 +44,23 @@ export async function analyzeResumeVsJd(
       "advice": "대응 방향 (한국어 2-4문장)"
     }
   ],
-  "magicFixes": [
+  "gapSuggestions": [
     {
-      "original": "이력서에서 그대로 발췌한 실제 문장 (verbatim, 한 글자도 바꾸지 않음)",
-      "revised": "original 문장을 채용공고 키워드·요구사항을 반영하여 실제 이력서에 바로 쓸 수 있도록 개선한 완성된 문장 (조언·가이드·설명 형식 금지)",
-      "reason": "수정 이유 (간결하게 한 문장)"
+      "jobRequirement": "채용공고 요구사항 (간결한 명사구, 예: 'TypeScript 개발 경험')",
+      "recommendation": "해당 요구사항이 이력서에 없거나 부족한 이유를 언급하고 구체적 보완 방향을 2-3문장으로 작성"
     }
   ]
 }
 
 규칙:
-- skillMatches: 채용공고의 모든 requiredSkills와 preferredSkills를 포함하라. 정렬 순서: missing → partial → match
+- skillMatches: 아래 스킬 목록의 각 항목을 이력서와 비교 평가하라. 목록 이외의 스킬은 추가하지 마라. 총 ${allSkills.length}개:
+  ${allSkills.map((s, i) => `${i + 1}. ${s}`).join('\n  ')}
+  정렬 순서: missing → partial → match
 - interviewQuestions: 최대 5개. 이력서의 약점을 파고드는 면접관 관점의 질문
-- magicFixes: 최대 5개. 아래 조건을 모두 충족하는 문장만 대상으로 한다.
-  대상 섹션 (이 섹션의 문장만 original로 사용):
-    - 자기소개 / 직무요약 서술 문장
-    - 프로젝트 경험 설명 (experience[].description 내 서술 문장)
-    - 보유 역량 서술 (역량·강점 서술 문장)
-    - 지원동기 / 커리어 플랜 서술 문장
-  제외 대상 (절대 original로 사용 금지):
-    - 학교명, 학과명 (예: "명지전문대학교 컴퓨터공학 학과" — 사실 정보, 수정 불가)
-    - 이름, 연락처, 이메일 등 개인정보
-    - 근무 기간·프로젝트 기간 등 날짜/기간 텍스트
-    - 기술 스택 열거 항목 (스킬 목록)
-  original은 반드시 주어·서술어가 있는 완전한 서술 문장이어야 한다. 이력서에 verbatim 존재하는 문장만 사용. revised는 이력서에 바로 붙여넣을 수 있는 완성된 문장으로 작성.
+- gapSuggestions: 최대 5개. 채용공고 requiredSkills·preferredSkills·responsibilities 중 이력서에서 전혀 확인되지 않는 항목만 대상으로 한다.
+  - skillMatches에서 status가 "match"인 항목은 gapSuggestions에 포함하지 않는다.
+  - jobRequirement: 채용공고 요구사항을 간결한 명사구로 작성 (예: "TypeScript 개발 경험", "Docker 컨테이너 운영")
+  - recommendation: 항목마다 문체를 다양하게 변화시킬 것. 가능한 어미 예시: "~을 추가해 보세요.", "~이 도움이 됩니다.", "~을 통해 역량을 어필할 수 있습니다.", "~을 이력서에 포함하는 것을 권장합니다.", "~을 강조하면 좋습니다." — 모든 항목에 동일한 어미 사용 금지
 
 이력서:
 ${JSON.stringify(resume)}
@@ -74,7 +81,7 @@ ${JSON.stringify(jd)}`);
     parsed === null ||
     !Array.isArray((parsed as Record<string, unknown>)['skillMatches']) ||
     !Array.isArray((parsed as Record<string, unknown>)['interviewQuestions']) ||
-    !Array.isArray((parsed as Record<string, unknown>)['magicFixes'])
+    !Array.isArray((parsed as Record<string, unknown>)['gapSuggestions'])
   ) {
     throw new Error('AI 응답에 필수 필드가 없습니다.');
   }
@@ -90,14 +97,46 @@ ${JSON.stringify(jd)}`);
     .map((e) => e.description?.trim())
     .filter((d): d is string => !!d && d.length > 0);
   summaryParts.push(...expDescriptions);
+  const projDescriptions = (resume.projects ?? [])
+    .slice(0, 3)
+    .map((p) => p.description?.trim())
+    .filter((d): d is string => !!d && d.length > 0);
+  summaryParts.push(...projDescriptions);
   const experienceSummary = summaryParts.join(' ').trim();
 
   return {
     score,
     scoreReason: typeof data['scoreReason'] === 'string' ? data['scoreReason'] : '',
     experienceSummary,
-    skillMatches: data['skillMatches'] as AnalysisResult['skillMatches'],
+    skillMatches: (() => {
+      const parsed = Array.isArray(data['skillMatches'])
+        ? (data['skillMatches'] as unknown[])
+            .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
+            .map((item) => ({
+              skill: typeof item['skill'] === 'string' ? item['skill'].trim() : '',
+              status: VALID_STATUSES.has(item['status'] as string)
+                ? (item['status'] as SkillStatus)
+                : ('missing' as SkillStatus),
+              evidence:
+                typeof item['evidence'] === 'string' && !isJsonLike(item['evidence'])
+                  ? item['evidence']
+                  : undefined,
+              suggestion:
+                typeof item['suggestion'] === 'string' && !isJsonLike(item['suggestion'])
+                  ? item['suggestion']
+                  : undefined,
+            }))
+            .filter((item) => item.skill.length > 0)
+        : [];
+      const covered = new Set(parsed.map((m) => m.skill.toLowerCase().trim()));
+      for (const skill of allSkills) {
+        if (!covered.has(skill.toLowerCase().trim())) {
+          parsed.push({ skill, status: 'missing' as SkillStatus, evidence: undefined, suggestion: undefined });
+        }
+      }
+      return parsed;
+    })(),
     interviewQuestions: data['interviewQuestions'] as AnalysisResult['interviewQuestions'],
-    magicFixes: data['magicFixes'] as AnalysisResult['magicFixes'],
+    gapSuggestions: data['gapSuggestions'] as AnalysisResult['gapSuggestions'],
   };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import type { AnalysisResult, DangerQuestion, MagicFix } from '@/types/analysis';
+import type { AnalysisResult, DangerQuestion, GapSuggestion } from '@/types/analysis';
 
 interface StepActionProps {
   analysisResult: AnalysisResult;
@@ -56,89 +56,44 @@ function DangerCard({ item }: { item: DangerQuestion }) {
   );
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  };
-
-  if (!('clipboard' in navigator)) return null;
-
-  return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="cursor-pointer text-neutral-500 text-xs hover:text-neutral-300 transition-colors shrink-0 self-start mt-0.5"
-    >
-      {copied ? '✓' : '📋'}
-    </button>
-  );
-}
-
-function MagicFixCard({ item }: { item: MagicFix }) {
-  const [originalExpanded, setOriginalExpanded] = useState(false);
-  const [revisedExpanded, setRevisedExpanded] = useState(false);
-  const [originalOverflows, setOriginalOverflows] = useState(false);
-  const [revisedOverflows, setRevisedOverflows] = useState(false);
-  const originalRef = useRef<HTMLParagraphElement>(null);
-  const revisedRef = useRef<HTMLParagraphElement>(null);
+function GapCard({ item }: { item: GapSuggestion }) {
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const recRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
-    if (originalRef.current) setOriginalOverflows(originalRef.current.scrollHeight > originalRef.current.clientHeight);
-    if (revisedRef.current) setRevisedOverflows(revisedRef.current.scrollHeight > revisedRef.current.clientHeight);
+    if (recRef.current) setOverflows(recRef.current.scrollHeight > recRef.current.clientHeight);
   }, []);
 
   return (
     <div className="rounded bg-[#1a1a1a] border border-neutral-800/60 p-4 space-y-3">
       <div>
-        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">수정 전</p>
-        <p ref={originalRef} className={`text-sm text-neutral-500 leading-relaxed ${originalExpanded ? '' : 'line-clamp-4'}`}>
-          {item.original}
+        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">보완이 필요한 항목</p>
+        <p className="text-sm font-medium text-neutral-300 leading-relaxed">{item.jobRequirement}</p>
+      </div>
+      <div>
+        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">보완 제안</p>
+        <p ref={recRef} className={`text-sm text-neutral-400 leading-relaxed ${expanded ? '' : 'line-clamp-4'}`}>
+          {item.recommendation}
         </p>
-        {originalOverflows && (
+        {overflows && (
           <button
             type="button"
-            onClick={() => setOriginalExpanded((prev) => !prev)}
-            aria-expanded={originalExpanded}
+            onClick={() => setExpanded((prev) => !prev)}
+            aria-expanded={expanded}
             className="text-neutral-500 text-xs hover:text-neutral-300 transition-colors mt-1"
           >
-            {originalExpanded ? '접기' : '더 보기'}
+            {expanded ? '접기' : '더 보기'}
           </button>
         )}
       </div>
-      <div>
-        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">수정 후</p>
-        <div className="flex items-start gap-2">
-          <div className="flex-1 min-w-0">
-            <p ref={revisedRef} className={`text-sm text-neutral-300 leading-relaxed ${revisedExpanded ? '' : 'line-clamp-4'}`}>
-              {item.revised}
-            </p>
-            {revisedOverflows && (
-              <button
-                type="button"
-                onClick={() => setRevisedExpanded((prev) => !prev)}
-                aria-expanded={revisedExpanded}
-                className="text-neutral-500 text-xs hover:text-neutral-300 transition-colors mt-1"
-              >
-                {revisedExpanded ? '접기' : '더 보기'}
-              </button>
-            )}
-          </div>
-          <CopyButton text={item.revised} />
-        </div>
-      </div>
-      <p className="text-xs text-neutral-500">{item.reason}</p>
     </div>
   );
 }
 
 export default function StepAction({ analysisResult }: StepActionProps) {
   const questions = analysisResult.interviewQuestions.slice(0, 5);
-  const fixes = analysisResult.magicFixes.slice(0, 5);
+  const gaps = analysisResult.gapSuggestions.slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -156,15 +111,15 @@ export default function StepAction({ analysisResult }: StepActionProps) {
         )}
       </div>
 
-      {/* Magic Fix */}
+      {/* Gap Suggestions */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">문장 개선 제안</p>
-        {fixes.length === 0 ? (
-          <p className="text-sm text-neutral-500">수정 제안이 없습니다. 이력서가 공고와 잘 맞습니다.</p>
+        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">이력서 보완 제안</p>
+        {gaps.length === 0 ? (
+          <p className="text-sm text-neutral-500">보완 제안이 없습니다. 이력서가 공고와 잘 맞습니다.</p>
         ) : (
           <div className="space-y-3">
-            {fixes.map((item, i) => (
-              <MagicFixCard key={i} item={item} />
+            {gaps.map((item, i) => (
+              <GapCard key={i} item={item} />
             ))}
           </div>
         )}
