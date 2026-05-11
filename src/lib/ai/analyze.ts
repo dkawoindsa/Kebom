@@ -13,12 +13,10 @@ export async function analyzeResumeVsJd(
   resume: Omit<ResumeData, 'rawText'>,
   jd: Omit<JobRequirements, 'rawText'>,
 ): Promise<AnalysisResult> {
-  const allJdSkills = [...jd.requiredSkills, ...jd.preferredSkills];
-  const seenLower = new Set(allJdSkills.map((s) => s.toLowerCase().trim()));
-  const extraResumeSkills = (resume.skills ?? []).filter(
-    (s) => !seenLower.has(s.toLowerCase().trim()),
-  );
-  const allSkills = [...allJdSkills, ...extraResumeSkills];
+  const MAX_SKILLS = 10;
+  const required = jd.requiredSkills.slice(0, MAX_SKILLS);
+  const preferred = jd.preferredSkills.slice(0, MAX_SKILLS - required.length);
+  const allSkills = [...required, ...preferred];
 
   const text = await ollamaChat(`중요: scoreReason, experienceSummary, advice, reason 등 모든 텍스트 값은 반드시 한국어로 작성하라. 중국어·일본어 사용 절대 금지.
 
