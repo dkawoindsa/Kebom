@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import EditableField from '@/components/ui/EditableField';
 import SkillBadge from '@/components/ui/SkillBadge';
+import WarningIcon from '@/components/ui/WarningIcon';
 import type { ResumeData, JobRequirements, ExperienceItem, EducationItem } from '@/types/resume';
 import type { LoadingPhase, WizardError } from '@/types/wizard';
 
@@ -118,9 +119,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
           aria-live="assertive"
           className="rounded-lg bg-red-950/50 border border-red-800/60 px-4 py-3 text-sm text-red-300 flex items-center gap-2"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
+          <WarningIcon />
           {error.message}
         </div>
       )}
@@ -130,28 +129,32 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">기본 정보</p>
 
         <div className="space-y-1">
-          <p className="text-xs text-neutral-500">이름</p>
+          <p className="text-xs text-neutral-500">이름 <span className="text-red-400" aria-label="필수">*</span></p>
           <EditableField
+            id="field-name"
             value={draft.name}
             onChange={(v) => updateDraft('name', v)}
             label="이름"
             placeholder="이름을 입력하세요"
+            aria-describedby={draft.name.trim().length === 0 ? 'error-name' : undefined}
           />
           {draft.name.trim().length === 0 && (
-            <p className="text-xs text-red-400 mt-1">이름은 필수 항목입니다.</p>
+            <p id="error-name" className="text-xs text-red-400 mt-1" role="alert">이름은 필수 항목입니다.</p>
           )}
         </div>
 
         <div className="space-y-1">
-          <p className="text-xs text-neutral-500">이메일</p>
+          <p className="text-xs text-neutral-500">이메일 <span className="text-red-400" aria-label="필수">*</span></p>
           <EditableField
+            id="field-email"
             value={draft.contactEmail}
             onChange={(v) => updateDraft('contactEmail', v)}
             label="이메일"
             placeholder="이메일을 입력하세요"
+            aria-describedby={draft.contactEmail.trim().length === 0 ? 'error-email' : undefined}
           />
           {draft.contactEmail.trim().length === 0 && (
-            <p className="text-xs text-red-400 mt-1">이메일은 필수 항목입니다.</p>
+            <p id="error-email" className="text-xs text-red-400 mt-1" role="alert">이메일은 필수 항목입니다.</p>
           )}
         </div>
 
@@ -197,6 +200,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
             ref={newSkillInputRef}
             autoFocus
             type="text"
+            aria-label="새 스킬 입력"
             value={newSkill}
             onChange={(e) => setNewSkill(e.target.value)}
             onKeyDown={(e) => {
@@ -205,13 +209,13 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
             }}
             onBlur={handleAddSkill}
             placeholder="스킬 입력 후 Enter"
-            className="rounded-lg bg-[#0a0a0a] border border-neutral-600 px-3 py-1.5 text-sm text-neutral-300 focus:outline-none"
+            className="rounded-lg bg-[#0a0a0a] border border-neutral-600 px-3 py-1.5 text-sm text-neutral-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500"
           />
         ) : (
           <button
             type="button"
             onClick={() => setAddingSkill(true)}
-            className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+            className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
           >
             + 스킬 추가
           </button>
@@ -231,7 +235,8 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
                   <button
                     type="button"
                     onClick={() => handleDeleteExperience(i)}
-                    className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+                    aria-label={`경력 ${i + 1} 삭제`}
+                    className="text-neutral-400 text-sm hover:text-red-400 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
                   >
                     삭제
                   </button>
@@ -278,7 +283,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <button
           type="button"
           onClick={handleAddExperience}
-          className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
         >
           경력 추가
         </button>
@@ -297,7 +302,8 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
                   <button
                     type="button"
                     onClick={() => handleDeleteProject(i)}
-                    className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+                    aria-label={`프로젝트 ${i + 1} 삭제`}
+                    className="text-neutral-400 text-sm hover:text-red-400 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
                   >
                     삭제
                   </button>
@@ -344,7 +350,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <button
           type="button"
           onClick={handleAddProject}
-          className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
         >
           프로젝트 추가
         </button>
@@ -363,7 +369,8 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
                   <button
                     type="button"
                     onClick={() => handleDeleteEducation(i)}
-                    className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+                    aria-label={`학력 ${i + 1} 삭제`}
+                    className="text-neutral-400 text-sm hover:text-red-400 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
                   >
                     삭제
                   </button>
@@ -400,7 +407,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <button
           type="button"
           onClick={handleAddEducation}
-          className="text-neutral-500 text-sm hover:text-neutral-300 transition-colors"
+          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
         >
           학력 추가
         </button>
@@ -410,7 +417,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         type="button"
         disabled={isAnalyzing || !canConfirm}
         onClick={() => onConfirm(draft)}
-        className="w-full rounded-lg bg-white text-black text-sm font-medium px-4 py-2 hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full rounded-lg bg-white text-black text-sm font-medium px-4 py-2 hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]"
       >
         {isAnalyzing ? '분석 중...' : '확인 후 분석'}
       </button>

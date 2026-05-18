@@ -40,10 +40,17 @@ function ParsingSkeletonUI({ progress }: { progress: number }) {
       <div className="space-y-1">
         <p className="text-sm text-neutral-400">이력서와 공고를 읽고 있어요...</p>
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-neutral-800 rounded-full h-1">
+          <div
+            role="progressbar"
+            aria-valuenow={Math.round(progress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="읽기 진행률"
+            className="flex-1 bg-neutral-800 rounded-full h-1"
+          >
             <div className="bg-white h-1 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
-          <span className="text-xs text-neutral-500 tabular-nums w-8 text-right">{Math.round(progress)}%</span>
+          <span className="text-xs text-neutral-500 tabular-nums w-8 text-right" aria-hidden="true">{Math.round(progress)}%</span>
         </div>
       </div>
       <div className="space-y-2">
@@ -85,10 +92,17 @@ function AnalyzingSkeletonUI({ showSlowHint, progress }: { showSlowHint: boolean
           <p className="text-xs text-neutral-500">(시간이 더 걸릴 수 있어요)</p>
         )}
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-neutral-800 rounded-full h-1">
+          <div
+            role="progressbar"
+            aria-valuenow={Math.round(progress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="분석 진행률"
+            className="flex-1 bg-neutral-800 rounded-full h-1"
+          >
             <div className="bg-white h-1 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
-          <span className="text-xs text-neutral-500 tabular-nums w-8 text-right">{Math.round(progress)}%</span>
+          <span className="text-xs text-neutral-500 tabular-nums w-8 text-right" aria-hidden="true">{Math.round(progress)}%</span>
         </div>
       </div>
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
@@ -234,11 +248,14 @@ export default function WizardShell() {
   }
 
   let content: React.ReactNode;
+  let liveStatus = '';
 
   if (state.loading === 'parsing') {
     content = <ParsingSkeletonUI progress={progress} />;
+    liveStatus = '이력서와 공고를 읽는 중입니다.';
   } else if (state.loading === 'analyzing') {
     content = <AnalyzingSkeletonUI showSlowHint={showSlowHint} progress={progress} />;
+    liveStatus = '강점과 약점을 분석하는 중입니다.';
   } else if (state.step === 'upload') {
     content = <StepUpload onSubmit={handleParseSubmit} loading={state.loading} error={state.error} />;
   } else if (state.step === 'read') {
@@ -258,17 +275,22 @@ export default function WizardShell() {
         <StepAction analysisResult={state.analysisResult!} />
       </div>
     );
+    liveStatus = '분석이 완료되었습니다.';
   }
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
+      {/* 스크린 리더용 상태 알림 영역 */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {liveStatus}
+      </div>
       <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-xl font-semibold text-white">캐봄</h1>
           {state.step !== 'upload' && (
             <button
               onClick={handleReset}
-              className="rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-300 transition-colors hover:border-neutral-500 hover:text-white"
+              className="rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-300 transition-colors hover:border-neutral-500 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500"
             >
               새 분석 시작
             </button>

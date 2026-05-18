@@ -8,6 +8,8 @@ interface EditableFieldProps {
   label: string;
   multiline?: boolean;
   placeholder?: string;
+  id?: string;
+  'aria-describedby'?: string;
 }
 
 export default function EditableField({
@@ -16,6 +18,8 @@ export default function EditableField({
   label,
   multiline,
   placeholder,
+  id,
+  'aria-describedby': ariaDescribedBy,
 }: EditableFieldProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -65,12 +69,13 @@ export default function EditableField({
 
   if (editing) {
     const sharedClass =
-      'rounded-lg bg-[#0a0a0a] border border-neutral-600 px-4 py-3 text-sm text-neutral-300 focus:outline-none w-full';
+      'rounded-lg bg-[#0a0a0a] border border-neutral-600 px-4 py-3 text-sm text-neutral-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 w-full';
 
     if (multiline) {
       return (
         <textarea
           ref={textareaRef}
+          id={id}
           rows={3}
           value={draft}
           onChange={(e) => { setDraft(e.target.value); autoResize(e.target); }}
@@ -81,6 +86,7 @@ export default function EditableField({
           onBlur={save}
           aria-label={label}
           aria-multiline="true"
+          aria-describedby={ariaDescribedBy}
           placeholder={placeholder}
           className={`${sharedClass} resize-none overflow-hidden`}
         />
@@ -90,6 +96,7 @@ export default function EditableField({
     return (
       <input
         ref={inputRef}
+        id={id}
         type="text"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
@@ -100,6 +107,7 @@ export default function EditableField({
         }}
         onBlur={save}
         aria-label={label}
+        aria-describedby={ariaDescribedBy}
         placeholder={placeholder}
         className={sharedClass}
       />
@@ -109,14 +117,16 @@ export default function EditableField({
   return (
     <div
       ref={viewRef}
+      id={id}
       role="button"
       tabIndex={0}
       aria-label={label}
+      aria-describedby={ariaDescribedBy}
       onClick={enter}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); }
       }}
-      className="flex items-start justify-between gap-2 cursor-pointer group"
+      className="flex items-start justify-between gap-2 cursor-pointer group focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
     >
       <span className="text-sm text-neutral-300 group-hover:text-white transition-colors">
         {value || <span className="text-neutral-500">{placeholder}</span>}

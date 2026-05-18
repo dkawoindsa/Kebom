@@ -104,7 +104,7 @@ export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
           )}
         </div>
         {sorted.length === 0 ? (
-          <p className="text-sm text-neutral-500">분석된 스킬 매칭 결과가 없습니다.</p>
+          <p className="text-sm text-neutral-500">채용공고에서 스킬 요건을 확인할 수 없어 매칭 결과가 없습니다. 공고 내용이 명확하게 포함되어 있는지 확인해주세요.</p>
         ) : (
           <div>
             {sorted.map((match, i) => (

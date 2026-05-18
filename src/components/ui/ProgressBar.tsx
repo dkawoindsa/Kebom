@@ -24,12 +24,35 @@ export default function ProgressBar({ step, loading }: ProgressBarProps) {
   }
 
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <span className={labelClass(readActive, readDone)}>1 읽기</span>
-      <span className="text-neutral-700">→</span>
-      <span className={labelClass(analyzeActive, analyzeDone)}>2 분석</span>
-      <span className="text-neutral-700">→</span>
-      <span className={labelClass(actionActive, false)}>3 결과</span>
-    </div>
+    <nav aria-label="진행 단계">
+      <ol className="flex items-center gap-2 text-sm list-none p-0 m-0">
+        <li>
+          <span
+            className={labelClass(readActive, readDone)}
+            {...(readActive ? { 'aria-current': 'step' } : {})}
+          >
+            1 읽기
+          </span>
+        </li>
+        <li aria-hidden="true"><span className="text-neutral-700">→</span></li>
+        <li>
+          <span
+            className={labelClass(analyzeActive, analyzeDone)}
+            {...(analyzeActive ? { 'aria-current': 'step' } : {})}
+          >
+            2 분석
+          </span>
+        </li>
+        <li aria-hidden="true"><span className="text-neutral-700">→</span></li>
+        <li>
+          <span
+            className={labelClass(actionActive, false)}
+            {...(actionActive ? { 'aria-current': 'step' } : {})}
+          >
+            3 결과
+          </span>
+        </li>
+      </ol>
+    </nav>
   );
 }

@@ -91,15 +91,15 @@ export default function FileDropzone({
   }
 
   const defaultLabel = isTouch()
-    ? '탭하여 이력서 PDF 선택'
-    : '이력서 PDF를 드래그하거나 클릭해서 선택하세요';
+    ? '탭하여 파일 선택'
+    : '파일을 드래그하거나 클릭해서 선택하세요';
 
   const guideLabel = label ?? defaultLabel;
 
   const borderClass = isDragging
     ? 'border-neutral-500 bg-[#1a1a1a]'
     : selectedFile
-    ? 'border-solid border-neutral-700'
+    ? 'border-solid border-green-800/60 bg-green-950/20'
     : 'border-dashed border-neutral-700';
 
   return (
@@ -107,8 +107,8 @@ export default function FileDropzone({
       <div
         role="button"
         tabIndex={0}
-        aria-label="이력서 PDF 업로드"
-        className={`border rounded-lg bg-[#0f0f0f] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${borderClass}`}
+        aria-label={guideLabel}
+        className={`border rounded-lg bg-[#0f0f0f] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 ${borderClass}`}
         onDragOver={onDragOver}
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
@@ -132,8 +132,8 @@ export default function FileDropzone({
 
         {selectedFile ? (
           <>
-            <p className="text-sm text-neutral-300">{selectedFile.name}</p>
-            <p className="text-xs text-neutral-500 mt-0.5">{formatMB(selectedFile.size)} MB</p>
+            <p className="text-sm text-green-300">{selectedFile.name}</p>
+            <p className="text-xs text-neutral-500 mt-0.5">{formatMB(selectedFile.size)} MB · 선택됨</p>
           </>
         ) : (
           <>
@@ -146,7 +146,7 @@ export default function FileDropzone({
       </div>
 
       {error && (
-        <p className="text-xs text-red-400 mt-1">{error}</p>
+        <p className="text-xs text-red-400 mt-1" role="alert">{error}</p>
       )}
     </div>
   );
