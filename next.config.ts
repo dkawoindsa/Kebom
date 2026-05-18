@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['pdf-parse'],
   experimental: {
     serverActions: {
-      bodySizeLimit: '6mb',
+      bodySizeLimit: '5mb',
     },
   },
   async headers() {

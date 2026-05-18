@@ -35,6 +35,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const hasText = typeof jobDescription === 'string' && jobDescription.trim() !== '';
   const hasImage = jobImageFile instanceof File;
 
+  if (hasText && (jobDescription as string).length > 10000) {
+    return NextResponse.json({ error: '채용공고는 10,000자를 초과할 수 없습니다.' }, { status: 400 });
+  }
+
   if (!hasText && !hasImage) {
     return NextResponse.json({ error: '채용 공고를 입력해주세요.' }, { status: 400 });
   }
@@ -80,7 +84,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(response, { status: 200 });
   } catch (err) {
-    console.error('[parse-resume] error:', err);
+    console.error('[parse-resume] error');
     const message = err instanceof Error ? err.message : '알 수 없는 오류';
     const knownMessages = [
       '이력서를 읽을 수 없습니다. 텍스트 기반 PDF를 사용해주세요.',

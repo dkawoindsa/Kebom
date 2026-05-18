@@ -11,6 +11,8 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "groq-sdk": "^0.13.0",
     "next": "15.3.0",
     "pdf-parse": "^1.1.1",
