@@ -5,7 +5,8 @@
       "Bash(claude --version)",
       "Bash(claude -p --dangerously-skip-permissions --output-format json \"say hello\")",
       "Bash(echo \"exit: $?\")",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(npm run *)"
     ]
   }
 }

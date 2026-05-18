@@ -1,12 +1,12 @@
 /**
  * @jest-environment node
  */
-jest.mock('@/lib/ai/ollama');
+jest.mock('@/lib/ai/groq');
 
 import { POST } from '@/app/api/analyze/route';
-import { ollamaChat } from '@/lib/ai/ollama';
+import { groqChat } from '@/lib/ai/groq';
 
-const mockOllamaChat = ollamaChat as jest.Mock;
+const mockGroqChat = groqChat as jest.Mock;
 
 const MOCK_ANALYSIS_JSON = JSON.stringify({
   score: 80,
@@ -17,7 +17,7 @@ const MOCK_ANALYSIS_JSON = JSON.stringify({
     { skill: 'Docker', status: 'missing', suggestion: 'Docker 학습 권장' },
   ],
   interviewQuestions: [{ question: 'TypeScript 경험은?', advice: '구체적으로 답하세요.' }],
-  gapSuggestions: [{ jobRequirement: 'Docker 컨테이너 운영', recommendation: '채용공고에서 요구하는 Docker 컨테이너 운영이(가) 이력서에서 확인되지 않습니다. 관련 경험을 추가하면 경쟁력이 높아질 것입니다.' }],
+  gapSuggestions: [{ jobRequirement: 'Docker 컨테이너 운영', recommendation: '관련 경험을 추가하면 경쟁력이 높아질 것입니다.' }],
 });
 
 const MOCK_RESUME_DATA = {
@@ -47,7 +47,7 @@ function makeRequest(body: unknown): Request {
 
 describe('POST /api/analyze', () => {
   beforeEach(() => {
-    mockOllamaChat.mockResolvedValue(MOCK_ANALYSIS_JSON);
+    mockGroqChat.mockResolvedValue(MOCK_ANALYSIS_JSON);
   });
 
   afterEach(() => {
@@ -96,8 +96,8 @@ describe('POST /api/analyze', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('Ollama 실패 → 500', async () => {
-    mockOllamaChat.mockRejectedValue(new Error('Ollama 요청 실패 (500): 서버 오류'));
+  it('Groq API 키 미설정 → 500', async () => {
+    mockGroqChat.mockRejectedValue(new Error('GROQ_API_KEY가 설정되지 않았습니다.'));
 
     const res = await POST(
       makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })
@@ -108,8 +108,8 @@ describe('POST /api/analyze', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('Ollama 연결 불가 → 500', async () => {
-    mockOllamaChat.mockRejectedValue(new Error('ECONNREFUSED'));
+  it('Groq API 실패 → 500', async () => {
+    mockGroqChat.mockRejectedValue(new Error('서버 오류'));
 
     const res = await POST(
       makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })

@@ -14,9 +14,16 @@ export default function StepUpload({ onSubmit, loading, error }: StepUploadProps
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescText, setJobDescText] = useState('');
   const [jobImageFile, setJobImageFile] = useState<File | null>(null);
+  const [jdMode, setJdMode] = useState<'text' | 'image'>('text');
 
   const isParsing = loading === 'parsing';
   const canSubmit = !!resumeFile && (jobDescText.trim().length > 0 || !!jobImageFile);
+
+  function switchJdMode(mode: 'text' | 'image') {
+    setJdMode(mode);
+    if (mode === 'text') setJobImageFile(null);
+    else setJobDescText('');
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,33 +68,58 @@ export default function StepUpload({ onSubmit, loading, error }: StepUploadProps
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
         <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">채용공고</p>
 
-        <div className="space-y-2">
-          <label htmlFor="jd-text" className="text-xs text-neutral-500">
+        <div className="flex border-b border-neutral-800">
+          <button
+            type="button"
+            onClick={() => switchJdMode('text')}
+            className={`px-4 py-2 text-xs font-medium transition-colors cursor-pointer ${
+              jdMode === 'text'
+                ? 'text-white border-b-2 border-white -mb-px'
+                : 'text-neutral-500 hover:text-neutral-300'
+            }`}
+          >
             텍스트 입력
-          </label>
-          <textarea
-            id="jd-text"
-            value={jobDescText}
-            onChange={(e) => setJobDescText(e.target.value)}
-            placeholder="채용공고 내용을 붙여넣으세요"
-            className="w-full rounded-lg bg-[#0a0a0a] border border-neutral-800 px-4 py-3 text-sm text-neutral-300 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 min-h-[120px] max-h-[320px] resize-y overflow-y-auto"
-          />
+          </button>
+          <button
+            type="button"
+            onClick={() => switchJdMode('image')}
+            className={`px-4 py-2 text-xs font-medium transition-colors cursor-pointer ${
+              jdMode === 'image'
+                ? 'text-white border-b-2 border-white -mb-px'
+                : 'text-neutral-500 hover:text-neutral-300'
+            }`}
+          >
+            이미지 업로드
+          </button>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-xs text-neutral-500">또는 이미지 업로드</p>
-          <FileDropzone
-            onFileSelect={setJobImageFile}
-            accept="image/png,image/jpeg"
-            maxSizeMB={5}
-            label={
-              typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
-                ? '탭하여 채용공고 이미지 선택'
-                : '채용공고 이미지를 드래그하거나 클릭해서 선택하세요'
-            }
-            selectedFile={jobImageFile}
-          />
-        </div>
+        {jdMode === 'text' && (
+          <div className="animate-fade-in">
+            <textarea
+              id="jd-text"
+              value={jobDescText}
+              onChange={(e) => setJobDescText(e.target.value)}
+              placeholder="채용공고 내용을 붙여넣으세요"
+              className="w-full rounded-lg bg-[#0a0a0a] border border-neutral-800 px-4 py-3 text-sm text-neutral-300 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 min-h-[120px] max-h-[320px] resize-y overflow-y-auto"
+            />
+          </div>
+        )}
+
+        {jdMode === 'image' && (
+          <div className="animate-fade-in">
+            <FileDropzone
+              onFileSelect={setJobImageFile}
+              accept="image/png,image/jpeg"
+              maxSizeMB={5}
+              label={
+                typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+                  ? '탭하여 채용공고 이미지 선택'
+                  : '채용공고 이미지를 드래그하거나 클릭해서 선택하세요'
+              }
+              selectedFile={jobImageFile}
+            />
+          </div>
+        )}
       </div>
 
       <button

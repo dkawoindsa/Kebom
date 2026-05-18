@@ -1,4 +1,4 @@
-import { ollamaChat, ollamaChatWithImage } from './ollama';
+import { groqChat, groqChatWithImage } from './groq';
 import { extractSkillsFromText } from './parse-resume';
 import type { JobRequirements } from '@/types/resume';
 
@@ -82,7 +82,10 @@ function parseJdResponse(text: string, originalInput: string): JobRequirements {
 }
 
 export async function parseJdFromText(jobDescriptionText: string): Promise<JobRequirements> {
-  const text = await ollamaChat(`중요: 모든 텍스트 값은 반드시 한국어로 작성하라. 중국어·일본어 사용 절대 금지.
+  const text = await groqChat(`중요 언어 규칙:
+- title, company, responsibilities: 반드시 한국어로만 작성하라. 영어 단어 금지.
+- requiredSkills, preferredSkills: 기술 스택은 영어 표준명 유지 (예: React, Python, MySQL, Docker).
+- 한자(漢字), 일본어, 아랍어 등 한국어·영어 외 모든 문자는 어떤 필드에도 절대 사용하지 마라.
 
 당신은 채용 전문가로서 채용공고에서 핵심 요구사항을 정확하게 파악하는 것이 전문입니다.
 
@@ -99,15 +102,18 @@ export async function parseJdFromImage(
   imageBuffer: Buffer,
   mediaType: 'image/png' | 'image/jpeg'
 ): Promise<JobRequirements> {
-  void mediaType;
   const base64 = imageBuffer.toString('base64');
 
-  const text = await ollamaChatWithImage(
-    `중요: 모든 텍스트 값은 반드시 한국어로 작성하라. 중국어·일본어 사용 절대 금지.
+  const text = await groqChatWithImage(
+    `중요 언어 규칙:
+- title, company, responsibilities: 반드시 한국어로만 작성하라. 영어 단어 금지.
+- requiredSkills, preferredSkills: 기술 스택은 영어 표준명 유지 (예: React, Python, MySQL, Docker).
+- 한자(漢字), 일본어, 아랍어 등 한국어·영어 외 모든 문자는 어떤 필드에도 절대 사용하지 마라.
 
 위 채용공고 이미지를 분석하여 다음 JSON 구조로 반환하라.
 ${JD_PROMPT_SUFFIX.replace('아래 채용공고 원본 텍스트', '이미지에서 추출한 텍스트')}`,
     base64,
+    mediaType,
   );
 
   return parseJdResponse(text, text);

@@ -1,14 +1,16 @@
 /**
  * @jest-environment node
  */
-jest.mock('@google/generative-ai');
+jest.mock('@/lib/ai/groq');
 jest.mock('pdf-parse');
 
 import { POST } from '@/app/api/parse-resume/route';
 import { NextRequest } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { groqChat, groqChatWithImage } from '@/lib/ai/groq';
 import pdfParse from 'pdf-parse';
 
+const mockGroqChat = groqChat as jest.Mock;
+const mockGroqChatWithImage = groqChatWithImage as jest.Mock;
 const mockPdfParse = pdfParse as jest.MockedFunction<typeof pdfParse>;
 
 const MOCK_RESUME_JSON = JSON.stringify({
@@ -45,17 +47,13 @@ function makeImageFile(type = 'image/png', sizeBytes = 100): File {
 }
 
 describe('POST /api/parse-resume', () => {
-  const originalApiKey = process.env.GOOGLE_AI_API_KEY;
-  let mockGenerateContent: jest.Mock;
+  const originalGroqApiKey = process.env.GROQ_API_KEY;
 
   beforeEach(() => {
-    mockGenerateContent = jest.fn();
-    (GoogleGenerativeAI as jest.Mock).mockImplementation(() => ({
-      getGenerativeModel: () => ({ generateContent: mockGenerateContent }),
-    }));
-    mockGenerateContent
-      .mockResolvedValueOnce({ response: { text: () => MOCK_RESUME_JSON } })
-      .mockResolvedValueOnce({ response: { text: () => MOCK_JD_JSON } });
+    mockGroqChat
+      .mockResolvedValueOnce(MOCK_RESUME_JSON)
+      .mockResolvedValueOnce(MOCK_JD_JSON);
+    mockGroqChatWithImage.mockResolvedValue(MOCK_JD_JSON);
     mockPdfParse.mockResolvedValue({
       text: '이력서 텍스트',
       numpages: 1,
@@ -64,11 +62,11 @@ describe('POST /api/parse-resume', () => {
       metadata: {},
       version: '1.10.100',
     });
-    process.env.GOOGLE_AI_API_KEY = 'test-api-key';
+    process.env.GROQ_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
-    process.env.GOOGLE_AI_API_KEY = originalApiKey;
+    process.env.GROQ_API_KEY = originalGroqApiKey;
     jest.clearAllMocks();
   });
 
@@ -167,12 +165,12 @@ describe('POST /api/parse-resume', () => {
     const res = await POST(makeRequest(formData));
 
     expect(res.status).toBe(200);
-    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
+    expect(mockGroqChatWithImage).not.toHaveBeenCalled();
   });
 
-  it('Gemini SDK 실패 → 500', async () => {
-    mockGenerateContent.mockReset();
-    mockGenerateContent.mockRejectedValue(new Error('API 오류'));
+  it('Groq API 실패 → 500', async () => {
+    mockGroqChat.mockReset();
+    mockGroqChat.mockRejectedValue(new Error('API 오류'));
 
     const formData = new FormData();
     formData.append('resume', makePdfFile(), 'resume.pdf');
@@ -185,8 +183,9 @@ describe('POST /api/parse-resume', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('GOOGLE_AI_API_KEY 미설정 → 500', async () => {
-    delete process.env.GOOGLE_AI_API_KEY;
+  it('GROQ_API_KEY 미설정 → 500', async () => {
+    mockGroqChat.mockReset();
+    mockGroqChat.mockRejectedValue(new Error('GROQ_API_KEY가 설정되지 않았습니다.'));
 
     const formData = new FormData();
     formData.append('resume', makePdfFile(), 'resume.pdf');

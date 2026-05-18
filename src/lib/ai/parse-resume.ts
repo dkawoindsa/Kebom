@@ -1,4 +1,4 @@
-import { ollamaChat } from "./ollama";
+import { groqChat } from "./groq";
 import type { ResumeData, ExperienceItem, EducationItem } from "@/types/resume";
 
 const KNOWN_SKILLS: string[] = [
@@ -707,7 +707,10 @@ export function extractSkillsFromText(text: string): string[] {
 
 export async function parseResume(pdfText: string): Promise<ResumeData> {
   const text =
-    await ollamaChat(`중요: 모든 텍스트 값(summary, description 등)은 반드시 한국어로 작성하라. 중국어·일본어 사용 절대 금지.
+    await groqChat(`중요 언어 규칙:
+- summary, description, role, company, institution, degree: 반드시 한국어로만 작성하라. 영어 단어 금지.
+- skills: 기술 스택은 영어 표준명 유지 (예: HTML5, JavaScript, React, MySQL).
+- 한자(漢字), 일본어, 아랍어 등 한국어·영어 외 모든 문자는 어떤 필드에도 절대 사용하지 마라.
 
 당신은 채용 전문가로서 이력서 데이터를 정확하게 추출하는 것이 전문입니다. 주어진 이력서 텍스트에서 구조화된 정보를 빠짐없이 추출하세요.
 
