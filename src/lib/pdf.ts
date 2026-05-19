@@ -3,7 +3,12 @@
 const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>;
 
 export async function extractTextFromPdf(buffer: Buffer): Promise<string> {
-  const result = await pdfParse(buffer);
+  let result: { text: string };
+  try {
+    result = await pdfParse(buffer);
+  } catch {
+    throw new Error('이력서를 읽을 수 없습니다. 텍스트 기반 PDF를 사용해주세요.');
+  }
   if (result.text.trim() === '') {
     throw new Error('이력서를 읽을 수 없습니다. 텍스트 기반 PDF를 사용해주세요.');
   }

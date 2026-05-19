@@ -1,4 +1,5 @@
 export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromPdf } from '@/lib/pdf';
@@ -6,7 +7,7 @@ import { parseResume } from '@/lib/ai/parse-resume';
 import { parseJdFromText, parseJdFromImage } from '@/lib/ai/parse-jd';
 import type { ParseResumeResponse } from '@/types/api';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   let formData: FormData;
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   if (resumeFile.size > MAX_FILE_SIZE) {
-    return NextResponse.json({ error: '이력서 파일 크기는 5MB를 초과할 수 없습니다.' }, { status: 400 });
+    return NextResponse.json({ error: '이력서 파일 크기는 4MB를 초과할 수 없습니다.' }, { status: 400 });
   }
 
   const jobDescription = formData.get('jobDescription');
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
     if (jobImageFile.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: '채용 공고 이미지 파일 크기는 5MB를 초과할 수 없습니다.' },
+        { error: '채용 공고 이미지 파일 크기는 4MB를 초과할 수 없습니다.' },
         { status: 400 }
       );
     }
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(response, { status: 200 });
   } catch (err) {
-    console.error('[parse-resume] error');
+    console.error('[parse-resume] error', err instanceof Error ? err.message : err);
     const message = err instanceof Error ? err.message : '알 수 없는 오류';
     const knownMessages = [
       '이력서를 읽을 수 없습니다. 텍스트 기반 PDF를 사용해주세요.',
