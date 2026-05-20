@@ -95,7 +95,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (knownMessages.includes(message)) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
-    if (message.includes('GROQ_API_KEY가 설정되지 않았습니다')) {
+    if (message.includes('GOOGLE_AI_API_KEY가 설정되지 않았습니다')) {
       return NextResponse.json(
         { error: 'AI 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.' },
         { status: 500 }

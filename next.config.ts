@@ -8,7 +8,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['pdf-parse', 'groq-sdk'],
+  serverExternalPackages: ['pdf-parse'],
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb',

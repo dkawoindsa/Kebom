@@ -1,4 +1,4 @@
-import { groqChat, groqChatWithImage } from './groq';
+import { geminiChat as groqChat, geminiChatWithImage as groqChatWithImage } from './gemini';
 import { extractSkillsFromText } from './parse-resume';
 import type { JobRequirements } from '@/types/resume';
 

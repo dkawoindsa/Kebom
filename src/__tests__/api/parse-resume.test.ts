@@ -1,16 +1,16 @@
 /**
  * @jest-environment node
  */
-jest.mock('@/lib/ai/groq');
+jest.mock('@/lib/ai/gemini');
 jest.mock('pdf-parse');
 
 import { POST } from '@/app/api/parse-resume/route';
 import { NextRequest } from 'next/server';
-import { groqChat, groqChatWithImage } from '@/lib/ai/groq';
+import { geminiChat, geminiChatWithImage } from '@/lib/ai/gemini';
 import pdfParse from 'pdf-parse';
 
-const mockGroqChat = groqChat as jest.Mock;
-const mockGroqChatWithImage = groqChatWithImage as jest.Mock;
+const mockGroqChat = geminiChat as jest.Mock;
+const mockGroqChatWithImage = geminiChatWithImage as jest.Mock;
 const mockPdfParse = pdfParse as jest.MockedFunction<typeof pdfParse>;
 
 const MOCK_RESUME_JSON = JSON.stringify({
@@ -47,7 +47,7 @@ function makeImageFile(type = 'image/png', sizeBytes = 100): File {
 }
 
 describe('POST /api/parse-resume', () => {
-  const originalGroqApiKey = process.env.GROQ_API_KEY;
+  const originalGroqApiKey = process.env.GOOGLE_AI_API_KEY;
 
   beforeEach(() => {
     mockGroqChat
@@ -62,11 +62,11 @@ describe('POST /api/parse-resume', () => {
       metadata: {},
       version: '1.10.100',
     });
-    process.env.GROQ_API_KEY = 'test-api-key';
+    process.env.GOOGLE_AI_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
-    process.env.GROQ_API_KEY = originalGroqApiKey;
+    process.env.GOOGLE_AI_API_KEY = originalGroqApiKey;
     jest.clearAllMocks();
   });
 
@@ -183,9 +183,9 @@ describe('POST /api/parse-resume', () => {
     expect(body.error).toBeDefined();
   });
 
-  it('GROQ_API_KEY 미설정 → 500', async () => {
+  it('GOOGLE_AI_API_KEY 미설정 → 500', async () => {
     mockGroqChat.mockReset();
-    mockGroqChat.mockRejectedValue(new Error('GROQ_API_KEY가 설정되지 않았습니다.'));
+    mockGroqChat.mockRejectedValue(new Error('GOOGLE_AI_API_KEY가 설정되지 않았습니다.'));
 
     const formData = new FormData();
     formData.append('resume', makePdfFile(), 'resume.pdf');

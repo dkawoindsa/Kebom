@@ -1,4 +1,4 @@
-import { groqChat } from "./groq";
+import { geminiChat as groqChat } from "./gemini";
 import type { ResumeData, ExperienceItem, EducationItem } from "@/types/resume";
 
 const KNOWN_SKILLS: string[] = [

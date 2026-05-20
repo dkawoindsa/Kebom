@@ -4,7 +4,7 @@
 - Next.js 15 (App Router, Server Components 기본)
 - TypeScript strict mode (strict: true, noUncheckedIndexedAccess: true)
 - Tailwind CSS v4
-- Google Gemini API (gemini-2.0-flash 파싱, gemini-2.5-pro 분석)
+- Google Gemini API (gemini-2.5-flash 파싱, gemini-2.5-pro 분석)
 - pdf-parse (서버 전용 API 라우트에서만 사용)
 - Jest + React Testing Library
 
