@@ -1,4 +1,4 @@
-import { groqChat } from './groq';
+import { geminiChat as groqChat } from './gemini';
 import type { ResumeData, JobRequirements } from '@/types/resume';
 import type { AnalysisResult, SkillStatus } from '@/types/analysis';
 
