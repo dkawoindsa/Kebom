@@ -20,7 +20,11 @@ export async function geminiChat(userPrompt: string, model = GEMINI_MODEL): Prom
   const genModel = client.getGenerativeModel({
     model,
     systemInstruction: SYSTEM_INSTRUCTION,
-    generationConfig: { responseMimeType: 'application/json' },
+    generationConfig: {
+      responseMimeType: 'application/json',
+      // thinking을 비활성화하여 latency 단축 (Vercel Hobby 10초 제한 대응)
+      thinkingConfig: { thinkingBudget: 0 },
+    } as never,
   });
   const result = await genModel.generateContent(userPrompt);
   return result.response.text();
@@ -36,7 +40,10 @@ export async function geminiChatWithImage(
   const genModel = client.getGenerativeModel({
     model,
     systemInstruction: SYSTEM_INSTRUCTION,
-    generationConfig: { responseMimeType: 'application/json' },
+    generationConfig: {
+      responseMimeType: 'application/json',
+      thinkingConfig: { thinkingBudget: 0 },
+    } as never,
   });
   const result = await genModel.generateContent([
     { inlineData: { data: imageBase64, mimeType: mediaType } },
