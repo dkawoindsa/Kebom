@@ -1,5 +1,5 @@
-export const runtime = 'nodejs';
-export const maxDuration = 10;
+export const runtime = 'edge';
+export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { parseJdFromText, parseJdFromImage } from '@/lib/ai/parse-jd';
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const jobRequirements = hasText
       ? await parseJdFromText(jobDescription as string)
       : await parseJdFromImage(
-          Buffer.from(await (jobImageFile as File).arrayBuffer()),
+          await (jobImageFile as File).arrayBuffer(),
           (jobImageFile as File).type as 'image/png' | 'image/jpeg'
         );
 

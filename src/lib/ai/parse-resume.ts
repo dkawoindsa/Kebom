@@ -731,8 +731,7 @@ export async function parseResume(pdfText: string): Promise<ResumeData> {
   ],
   "education": [
     { "institution": "학교명", "degree": "학위/전공", "period": "기간" }
-  ],
-  "rawText": "원본 텍스트 전체"
+  ]
 }
 
 규칙:
@@ -745,8 +744,7 @@ export async function parseResume(pdfText: string): Promise<ResumeData> {
 - experience: "직장 경력" 섹션만 포함. 실제 회사 재직·인턴십·아르바이트·대회 수상 등의 이력만 포함하라. "프로젝트 경험" 섹션은 절대 포함 금지. 없으면 [].
 - summary: 자기소개·직무요약 섹션이 있으면 그 내용 사용. 없으면 "프로젝트 경험" 섹션을 기반으로 프로젝트별 한 문장씩 요약하여 작성하라. 예: "프로젝트에서 프론트엔드 개발자로 뉴스 스크랩 및 마이페이지 기능을 담당하였습니다. Wibby 프로젝트에서는 모임 관리 기능을 개발하였습니다." 절대 빈 문자열 금지.
 - education: 학력이 없으면 반드시 빈 배열 [] 로 반환. 생략 금지.
-- 위 8개 필드 외에 다른 필드를 추가하지 마라.
-- rawText는 아래 이력서 원본 텍스트를 그대로 포함시켜라.
+- 위 7개 필드 외에 다른 필드를 추가하지 마라.
 
 이력서 텍스트:
 ${pdfText}`);
