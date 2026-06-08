@@ -5,33 +5,44 @@ import { wizardReducer, initialState } from '@/lib/wizardReducer';
 import { PARSE_TIMEOUT_MS, ANALYZE_TIMEOUT_MS, SLOW_LOADING_HINT_MS } from '@/lib/constants';
 import type { ResumeData, JobRequirements } from '@/types/resume';
 import type { AnalysisResult } from '@/types/analysis';
-import type { ParseResumeResponse, AnalyzeRequest, AnalyzeResponse, ApiErrorResponse } from '@/types/api';
+import type { ParseResumeResponse, ParseJdResponse, AnalyzeRequest, AnalyzeResponse, AnalyzeExtrasResponse, ApiErrorResponse } from '@/types/api';
 import StepUpload from './StepUpload';
 import StepRead from './StepRead';
 import StepAnalyze from './StepAnalyze';
 import StepAction from './StepAction';
 import ProgressBar from '@/components/ui/ProgressBar';
 
-async function fetchAnalyze(
+async function fetchAnalyzeAll(
   resumeData: Omit<ResumeData, 'rawText'>,
   jobRequirements: Omit<JobRequirements, 'rawText'>,
   signal: AbortSignal
 ): Promise<AnalysisResult> {
   const body: AnalyzeRequest = { resumeData, jobRequirements };
-  const res = await fetch('/api/analyze', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
-  });
+  const bodyStr = JSON.stringify(body);
+  const headers = { 'Content-Type': 'application/json' };
 
-  if (!res.ok) {
-    const err: ApiErrorResponse = await res.json();
+  const [coreRes, extrasRes] = await Promise.all([
+    fetch('/api/analyze', { method: 'POST', headers, body: bodyStr, signal }),
+    fetch('/api/analyze/extras', { method: 'POST', headers, body: bodyStr, signal }),
+  ]);
+
+  if (!coreRes.ok) {
+    const err: ApiErrorResponse = await coreRes.json();
+    throw new Error(err.error ?? '분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  }
+  if (!extrasRes.ok) {
+    const err: ApiErrorResponse = await extrasRes.json();
     throw new Error(err.error ?? '분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
   }
 
-  const data: AnalyzeResponse = await res.json();
-  return data.result;
+  const coreData: AnalyzeResponse = await coreRes.json();
+  const extrasData: AnalyzeExtrasResponse = await extrasRes.json();
+
+  return {
+    ...coreData.result,
+    interviewQuestions: extrasData.interviewQuestions,
+    gapSuggestions: extrasData.gapSuggestions,
+  };
 }
 
 function ParsingSkeletonUI({ progress }: { progress: number }) {
@@ -183,7 +194,7 @@ export default function WizardShell() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { rawText: _jr, ...jobReqWithoutRaw } = jobRequirements;
 
-    fetchAnalyze(resumeWithoutRaw, jobReqWithoutRaw, controller.signal)
+    fetchAnalyzeAll(resumeWithoutRaw, jobReqWithoutRaw, controller.signal)
       .then((result) => dispatch({ type: 'ANALYZE_SUCCESS', payload: result }))
       .catch((err: unknown) => {
         if (err instanceof Error && err.name === 'AbortError') {
@@ -206,27 +217,43 @@ export default function WizardShell() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), PARSE_TIMEOUT_MS);
 
+    // 이력서 PDF와 JD 데이터를 별도 FormData로 분리하여 병렬 호출
+    const resumeFormData = new FormData();
+    resumeFormData.append('resume', formData.get('resume') as File);
+
+    const jdFormData = new FormData();
+    const jobDescription = formData.get('jobDescription');
+    const jobImage = formData.get('jobImage');
+    if (jobDescription) jdFormData.append('jobDescription', jobDescription as string);
+    if (jobImage instanceof File) jdFormData.append('jobImage', jobImage);
+
     try {
-      const res = await fetch('/api/parse-resume', {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
+      const [resumeRes, jdRes] = await Promise.all([
+        fetch('/api/parse-resume', { method: 'POST', body: resumeFormData, signal: controller.signal }),
+        fetch('/api/parse-jd', { method: 'POST', body: jdFormData, signal: controller.signal }),
+      ]);
 
       clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        const err: ApiErrorResponse = await res.json();
+      if (!resumeRes.ok) {
+        const err: ApiErrorResponse = await resumeRes.json();
+        dispatch({ type: 'PARSE_ERROR', payload: err.error ?? '분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' });
+        return;
+      }
+      if (!jdRes.ok) {
+        const err: ApiErrorResponse = await jdRes.json();
         dispatch({ type: 'PARSE_ERROR', payload: err.error ?? '분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' });
         return;
       }
 
-      const data: ParseResumeResponse = await res.json();
+      const resumeData: ParseResumeResponse = await resumeRes.json();
+      const jdData: ParseJdResponse = await jdRes.json();
+
       dispatch({
         type: 'PARSE_SUCCESS',
         payload: {
-          resumeData: { ...data.resumeData, rawText: '' },
-          jobRequirements: { ...data.jobRequirements, rawText: '' },
+          resumeData: { ...resumeData.resumeData, rawText: '' },
+          jobRequirements: { ...jdData.jobRequirements, rawText: '' },
         },
       });
     } catch (err) {

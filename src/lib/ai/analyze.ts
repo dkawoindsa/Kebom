@@ -1,6 +1,7 @@
 import { geminiChat as groqChat } from './gemini';
+import { logAiCall } from './logger';
 import type { ResumeData, JobRequirements } from '@/types/resume';
-import type { AnalysisResult, SkillStatus } from '@/types/analysis';
+import type { AnalysisResult, SkillStatus, DangerQuestion, GapSuggestion } from '@/types/analysis';
 
 const VALID_STATUSES = new Set<string>(['match', 'partial', 'missing']);
 
@@ -17,6 +18,14 @@ function cleanText(text: string): string {
     .trim();
 }
 
+const LANGUAGE_RULES = `언어 규칙(최우선, 절대 준수):
+- scoreReason, evidence, suggestion, question, advice, jobRequirement, recommendation: 반드시 순수한 한국어로만 작성하라.
+  허용 문자: 한글(가-힣), 숫자(0-9), 문장부호(.,!?;:()"' 등). 영어 단어·한자·일본어·러시아어·기타 외국어 절대 금지.
+  나쁜 예(절대 금지): "経験" "智能" "開発" "изуч" "相關" "Conduct" "경험(経験)"
+  좋은 예: "경험" "지능" "개발" "학습하고" "관련" "진행하고"
+- suggestion, advice, recommendation, scoreReason: 반드시 존댓말(해요체)로 작성하라. 반말·명령형(~해라, ~하라, ~해봐) 절대 금지.
+- skill(스킬명): JD에서 받은 영어 기술명을 그대로 유지하라. 번역하지 마라.`;
+
 export async function analyzeResumeVsJd(
   resume: Omit<ResumeData, 'rawText'>,
   jd: Omit<JobRequirements, 'rawText'>,
@@ -26,13 +35,10 @@ export async function analyzeResumeVsJd(
   const preferred = jd.preferredSkills.slice(0, MAX_SKILLS - required.length);
   const allSkills = [...required, ...preferred];
 
-  const text = await groqChat(`언어 규칙(최우선, 절대 준수):
-- scoreReason, evidence, suggestion, question, advice, jobRequirement, recommendation: 반드시 순수한 한국어로만 작성하라.
-  허용 문자: 한글(가-힣), 숫자(0-9), 문장부호(.,!?;:()"' 등). 영어 단어·한자·일본어·러시아어·기타 외국어 절대 금지.
-  나쁜 예(절대 금지): "経験" "智能" "開発" "изуч" "相關" "Conduct" "경험(経験)"
-  좋은 예: "경험" "지능" "개발" "학습하고" "관련" "진행하고"
-- suggestion, advice, recommendation, scoreReason: 반드시 존댓말(해요체)로 작성하라. 반말·명령형(~해라, ~하라, ~해봐) 절대 금지.
-- skill(스킬명): JD에서 받은 영어 기술명을 그대로 유지하라. 번역하지 마라.
+  const start = Date.now();
+  let text: string;
+  try {
+    text = await groqChat(`${LANGUAGE_RULES}
 
 당신은 10년 이상의 기술 채용 경험을 가진 시니어 HR 전문가입니다. 이력서와 채용공고를 전문가적 시각으로 분석하여 지원자의 합격 가능성과 개선 포인트를 정확하게 평가합니다.
 
@@ -48,18 +54,6 @@ export async function analyzeResumeVsJd(
       "status": "match" | "partial" | "missing",
       "evidence": "이력서에서 발견된 근거 (match/partial인 경우, 1-2문장)",
       "suggestion": "개선 제안 (partial/missing인 경우, 1-2문장)"
-    }
-  ],
-  "interviewQuestions": [
-    {
-      "question": "면접관이 물어볼 약점 질문",
-      "advice": "대응 방향 (2-4문장)"
-    }
-  ],
-  "gapSuggestions": [
-    {
-      "jobRequirement": "채용공고 요구사항 (간결한 명사구, 예: '타입스크립트 개발 경험')",
-      "recommendation": "해당 요구사항이 이력서에 없거나 부족한 이유를 언급하고 구체적 보완 방향을 2-3문장으로 작성"
     }
   ]
 }
@@ -83,17 +77,23 @@ export async function analyzeResumeVsJd(
   11. "~관련 경험이 있다면 이력서에 적극 반영하세요."
   12. "~을 다룬 경험을 간략하게라도 언급하면 유리합니다."
 - skillMatches[].evidence: match/partial 항목에서 이력서의 어느 부분에서 확인했는지 구체적으로 서술하라.
-- interviewQuestions: 최대 5개. 이력서의 약점을 파고드는 면접관 관점의 질문. 질문은 순수 한국어로, 영어 단어 혼용 금지.
-- gapSuggestions: 최대 5개. 채용공고 requiredSkills·preferredSkills·responsibilities 중 이력서에서 전혀 확인되지 않는 항목만 대상으로 한다.
-  - skillMatches에서 status가 "match"인 항목은 gapSuggestions에 포함하지 않는다.
-  - jobRequirement: 채용공고 요구사항을 간결한 명사구로 작성
-  - recommendation: 항목마다 문체를 다양하게 변화시킬 것. 가능한 어미 예시: "~을 추가해 보세요.", "~이 도움이 됩니다.", "~을 통해 역량을 어필할 수 있습니다.", "~을 이력서에 포함하는 것을 권장합니다.", "~을 강조하면 좋습니다." — 모든 항목에 동일한 어미 사용 금지
 
 이력서:
 ${JSON.stringify(resume)}
 
 채용공고:
 ${JSON.stringify(jd)}`);
+  } catch (err) {
+    logAiCall({
+      caller: 'analyzeResumeVsJd',
+      model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+      request: { resumeSkillCount: resume.skills.length, jdRequiredSkillCount: jd.requiredSkills.length, jdPreferredSkillCount: jd.preferredSkills.length },
+      durationMs: Date.now() - start,
+      status: 'error',
+      errorMessage: err instanceof Error ? err.message : 'unknown',
+    });
+    throw err;
+  }
 
   let parsed: unknown;
   try {
@@ -106,9 +106,7 @@ ${JSON.stringify(jd)}`);
   if (
     typeof parsed !== 'object' ||
     parsed === null ||
-    !Array.isArray((parsed as Record<string, unknown>)['skillMatches']) ||
-    !Array.isArray((parsed as Record<string, unknown>)['interviewQuestions']) ||
-    !Array.isArray((parsed as Record<string, unknown>)['gapSuggestions'])
+    !Array.isArray((parsed as Record<string, unknown>)['skillMatches'])
   ) {
     throw new Error('AI 응답에 필수 필드가 없습니다.');
   }
@@ -131,7 +129,130 @@ ${JSON.stringify(jd)}`);
   summaryParts.push(...projDescriptions);
   const experienceSummary = summaryParts.join(' ').trim();
 
-  const rawInterviewQuestions = Array.isArray(data['interviewQuestions'])
+  const skillMatches = (() => {
+    const parsedMatches = Array.isArray(data['skillMatches'])
+      ? (data['skillMatches'] as unknown[])
+          .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
+          .map((item) => ({
+            skill: typeof item['skill'] === 'string' ? item['skill'].trim() : '',
+            status: VALID_STATUSES.has(item['status'] as string)
+              ? (item['status'] as SkillStatus)
+              : ('missing' as SkillStatus),
+            evidence:
+              typeof item['evidence'] === 'string' && !isJsonLike(item['evidence'])
+                ? cleanText(item['evidence'])
+                : undefined,
+            suggestion:
+              typeof item['suggestion'] === 'string' && !isJsonLike(item['suggestion'])
+                ? cleanText(item['suggestion'])
+                : undefined,
+          }))
+          .filter((item) => item.skill.length > 0)
+      : [];
+    const covered = new Set(parsedMatches.map((m) => m.skill.toLowerCase().trim()));
+    for (const skill of allSkills) {
+      if (!covered.has(skill.toLowerCase().trim())) {
+        parsedMatches.push({ skill, status: 'missing' as SkillStatus, evidence: undefined, suggestion: undefined });
+      }
+    }
+    return parsedMatches;
+  })();
+
+  const matchCount = skillMatches.filter((m) => m.status === 'match').length;
+  const partialCount = skillMatches.filter((m) => m.status === 'partial').length;
+  const missingCount = skillMatches.filter((m) => m.status === 'missing').length;
+
+  logAiCall({
+    caller: 'analyzeResumeVsJd',
+    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+    request: { resumeSkillCount: resume.skills.length, jdRequiredSkillCount: jd.requiredSkills.length, jdPreferredSkillCount: jd.preferredSkills.length },
+    result: { score, matchCount, partialCount, missingCount },
+    durationMs: Date.now() - start,
+    status: 'success',
+  });
+
+  return {
+    score,
+    scoreReason: typeof data['scoreReason'] === 'string' ? cleanText(data['scoreReason']) : '',
+    experienceSummary,
+    skillMatches,
+    interviewQuestions: [],
+    gapSuggestions: [],
+  };
+}
+
+export async function analyzeExtras(
+  resume: Omit<ResumeData, 'rawText'>,
+  jd: Omit<JobRequirements, 'rawText'>,
+): Promise<{ interviewQuestions: DangerQuestion[]; gapSuggestions: GapSuggestion[] }> {
+  const start = Date.now();
+  let text: string;
+  try {
+    text = await groqChat(`${LANGUAGE_RULES}
+
+당신은 10년 이상의 기술 채용 경험을 가진 시니어 HR 전문가입니다.
+
+아래 이력서와 채용공고를 분석하여 다음 JSON 구조로 반환하라.
+
+반환 JSON 구조:
+{
+  "interviewQuestions": [
+    {
+      "question": "면접관이 물어볼 약점 질문",
+      "advice": "대응 방향 (2-4문장)"
+    }
+  ],
+  "gapSuggestions": [
+    {
+      "jobRequirement": "채용공고 요구사항 (간결한 명사구, 예: '타입스크립트 개발 경험')",
+      "recommendation": "해당 요구사항이 이력서에 없거나 부족한 이유를 언급하고 구체적 보완 방향을 2-3문장으로 작성"
+    }
+  ]
+}
+
+규칙:
+- interviewQuestions: 최대 5개. 이력서의 약점을 파고드는 면접관 관점의 질문. 질문은 순수 한국어로, 영어 단어 혼용 금지.
+- gapSuggestions: 최대 5개. 채용공고 requiredSkills·preferredSkills·responsibilities 중 이력서에서 전혀 확인되지 않는 항목만 대상으로 한다.
+  - jobRequirement: 채용공고 요구사항을 간결한 명사구로 작성
+  - recommendation: 항목마다 문체를 다양하게 변화시킬 것. 모든 항목에 동일한 어미 사용 금지.
+
+이력서:
+${JSON.stringify(resume)}
+
+채용공고:
+${JSON.stringify(jd)}`);
+  } catch (err) {
+    logAiCall({
+      caller: 'analyzeExtras',
+      model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+      request: { resumeSkillCount: resume.skills.length, jdRequiredSkillCount: jd.requiredSkills.length },
+      durationMs: Date.now() - start,
+      status: 'error',
+      errorMessage: err instanceof Error ? err.message : 'unknown',
+    });
+    throw err;
+  }
+
+  let parsed: unknown;
+  try {
+    const cleaned = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error('AI 응답을 파싱할 수 없습니다.');
+  }
+
+  if (
+    typeof parsed !== 'object' ||
+    parsed === null ||
+    !Array.isArray((parsed as Record<string, unknown>)['interviewQuestions']) ||
+    !Array.isArray((parsed as Record<string, unknown>)['gapSuggestions'])
+  ) {
+    throw new Error('AI 응답에 필수 필드가 없습니다.');
+  }
+
+  const data = parsed as Record<string, unknown>;
+
+  const interviewQuestions = Array.isArray(data['interviewQuestions'])
     ? (data['interviewQuestions'] as unknown[])
         .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
         .map((item) => ({
@@ -141,7 +262,7 @@ ${JSON.stringify(jd)}`);
         .filter((item) => item.question.length > 0)
     : [];
 
-  const rawGapSuggestions = Array.isArray(data['gapSuggestions'])
+  const gapSuggestions = Array.isArray(data['gapSuggestions'])
     ? (data['gapSuggestions'] as unknown[])
         .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
         .map((item) => ({
@@ -151,39 +272,14 @@ ${JSON.stringify(jd)}`);
         .filter((item) => item.jobRequirement.length > 0)
     : [];
 
-  return {
-    score,
-    scoreReason: typeof data['scoreReason'] === 'string' ? cleanText(data['scoreReason']) : '',
-    experienceSummary,
-    skillMatches: (() => {
-      const parsed = Array.isArray(data['skillMatches'])
-        ? (data['skillMatches'] as unknown[])
-            .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
-            .map((item) => ({
-              skill: typeof item['skill'] === 'string' ? item['skill'].trim() : '',
-              status: VALID_STATUSES.has(item['status'] as string)
-                ? (item['status'] as SkillStatus)
-                : ('missing' as SkillStatus),
-              evidence:
-                typeof item['evidence'] === 'string' && !isJsonLike(item['evidence'])
-                  ? cleanText(item['evidence'])
-                  : undefined,
-              suggestion:
-                typeof item['suggestion'] === 'string' && !isJsonLike(item['suggestion'])
-                  ? cleanText(item['suggestion'])
-                  : undefined,
-            }))
-            .filter((item) => item.skill.length > 0)
-        : [];
-      const covered = new Set(parsed.map((m) => m.skill.toLowerCase().trim()));
-      for (const skill of allSkills) {
-        if (!covered.has(skill.toLowerCase().trim())) {
-          parsed.push({ skill, status: 'missing' as SkillStatus, evidence: undefined, suggestion: undefined });
-        }
-      }
-      return parsed;
-    })(),
-    interviewQuestions: rawInterviewQuestions as AnalysisResult['interviewQuestions'],
-    gapSuggestions: rawGapSuggestions as AnalysisResult['gapSuggestions'],
-  };
+  logAiCall({
+    caller: 'analyzeExtras',
+    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+    request: { resumeSkillCount: resume.skills.length, jdRequiredSkillCount: jd.requiredSkills.length },
+    result: { interviewQuestionCount: interviewQuestions.length, gapSuggestionCount: gapSuggestions.length },
+    durationMs: Date.now() - start,
+    status: 'success',
+  });
+
+  return { interviewQuestions, gapSuggestions };
 }

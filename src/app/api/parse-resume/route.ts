@@ -4,7 +4,6 @@ export const maxDuration = 10;
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromPdf } from '@/lib/pdf';
 import { parseResume } from '@/lib/ai/parse-resume';
-import { parseJdFromText, parseJdFromImage } from '@/lib/ai/parse-jd';
 import type { ParseResumeResponse } from '@/types/api';
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024;
@@ -30,59 +29,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: '이력서 파일 크기는 4MB를 초과할 수 없습니다.' }, { status: 400 });
   }
 
-  const jobDescription = formData.get('jobDescription');
-  const jobImageFile = formData.get('jobImage');
-
-  const hasText = typeof jobDescription === 'string' && jobDescription.trim() !== '';
-  const hasImage = jobImageFile instanceof File;
-
-  if (hasText && (jobDescription as string).length > 10000) {
-    return NextResponse.json({ error: '채용공고는 10,000자를 초과할 수 없습니다.' }, { status: 400 });
-  }
-
-  if (!hasText && !hasImage) {
-    return NextResponse.json({ error: '채용 공고를 입력해주세요.' }, { status: 400 });
-  }
-
-  if (!hasText && hasImage) {
-    if (!['image/png', 'image/jpeg'].includes(jobImageFile.type)) {
-      return NextResponse.json(
-        { error: '채용 공고 이미지는 PNG 또는 JPEG 파일만 업로드할 수 있습니다.' },
-        { status: 400 }
-      );
-    }
-    if (jobImageFile.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: '채용 공고 이미지 파일 크기는 4MB를 초과할 수 없습니다.' },
-        { status: 400 }
-      );
-    }
-  }
-
   try {
     const resumeBuffer = Buffer.from(await resumeFile.arrayBuffer());
     const pdfText = await extractTextFromPdf(resumeBuffer);
-
-    const [resumeData, jobRequirements] = await Promise.all([
-      parseResume(pdfText),
-      hasText
-        ? parseJdFromText(jobDescription as string)
-        : parseJdFromImage(
-            Buffer.from(await (jobImageFile as File).arrayBuffer()),
-            (jobImageFile as File).type as 'image/png' | 'image/jpeg'
-          ),
-    ]);
+    const resumeData = await parseResume(pdfText);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { rawText: _resumeRaw, ...resumeDataWithoutRaw } = resumeData;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { rawText: _jdRaw, ...jobRequirementsWithoutRaw } = jobRequirements;
 
-    const response: ParseResumeResponse = {
-      resumeData: resumeDataWithoutRaw,
-      jobRequirements: jobRequirementsWithoutRaw,
-    };
-
+    const response: ParseResumeResponse = { resumeData: resumeDataWithoutRaw };
     return NextResponse.json(response, { status: 200 });
   } catch (err) {
     console.error('[parse-resume] error', err instanceof Error ? err.message : err);

@@ -1,4 +1,5 @@
 import { geminiChat as groqChat, geminiChatWithImage as groqChatWithImage } from './gemini';
+import { logAiCall } from './logger';
 import { extractSkillsFromText } from './parse-resume';
 import type { JobRequirements } from '@/types/resume';
 
@@ -82,7 +83,10 @@ function parseJdResponse(text: string, originalInput: string): JobRequirements {
 }
 
 export async function parseJdFromText(jobDescriptionText: string): Promise<JobRequirements> {
-  const text = await groqChat(`중요 언어 규칙:
+  const start = Date.now();
+  let text: string;
+  try {
+    text = await groqChat(`중요 언어 규칙:
 - title, company, responsibilities: 반드시 한국어로만 작성하라. 영어 단어 금지.
 - requiredSkills, preferredSkills: 기술 스택은 영어 표준명 유지 (예: React, Python, MySQL, Docker).
 - 한자(漢字), 일본어, 아랍어 등 한국어·영어 외 모든 문자는 어떤 필드에도 절대 사용하지 마라.
@@ -94,27 +98,77 @@ ${JD_PROMPT_SUFFIX}
 
 채용공고 텍스트:
 ${jobDescriptionText}`);
+  } catch (err) {
+    logAiCall({
+      caller: 'parseJdFromText',
+      model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+      request: { jdTextChars: jobDescriptionText.length },
+      durationMs: Date.now() - start,
+      status: 'error',
+      errorMessage: err instanceof Error ? err.message : 'unknown',
+    });
+    throw err;
+  }
 
-  return parseJdResponse(text, jobDescriptionText);
+  const result = parseJdResponse(text, jobDescriptionText);
+  logAiCall({
+    caller: 'parseJdFromText',
+    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+    request: { jdTextChars: jobDescriptionText.length },
+    result: {
+      requiredSkillCount: result.requiredSkills.length,
+      preferredSkillCount: result.preferredSkills.length,
+      responsibilityCount: result.responsibilities.length,
+    },
+    durationMs: Date.now() - start,
+    status: 'success',
+  });
+  return result;
 }
 
 export async function parseJdFromImage(
   imageBuffer: Buffer,
   mediaType: 'image/png' | 'image/jpeg'
 ): Promise<JobRequirements> {
+  const start = Date.now();
   const base64 = imageBuffer.toString('base64');
-
-  const text = await groqChatWithImage(
-    `중요 언어 규칙:
+  let text: string;
+  try {
+    text = await groqChatWithImage(
+      `중요 언어 규칙:
 - title, company, responsibilities: 반드시 한국어로만 작성하라. 영어 단어 금지.
 - requiredSkills, preferredSkills: 기술 스택은 영어 표준명 유지 (예: React, Python, MySQL, Docker).
 - 한자(漢字), 일본어, 아랍어 등 한국어·영어 외 모든 문자는 어떤 필드에도 절대 사용하지 마라.
 
 위 채용공고 이미지를 분석하여 다음 JSON 구조로 반환하라.
 ${JD_PROMPT_SUFFIX.replace('아래 채용공고 원본 텍스트', '이미지에서 추출한 텍스트')}`,
-    base64,
-    mediaType,
-  );
+      base64,
+      mediaType,
+    );
+  } catch (err) {
+    logAiCall({
+      caller: 'parseJdFromImage',
+      model: process.env.GEMINI_VISION_MODEL ?? 'gemini-2.5-flash',
+      request: { imageSizeBytes: imageBuffer.length },
+      durationMs: Date.now() - start,
+      status: 'error',
+      errorMessage: err instanceof Error ? err.message : 'unknown',
+    });
+    throw err;
+  }
 
-  return parseJdResponse(text, text);
+  const result = parseJdResponse(text, text);
+  logAiCall({
+    caller: 'parseJdFromImage',
+    model: process.env.GEMINI_VISION_MODEL ?? 'gemini-2.5-flash',
+    request: { imageSizeBytes: imageBuffer.length },
+    result: {
+      requiredSkillCount: result.requiredSkills.length,
+      preferredSkillCount: result.preferredSkills.length,
+      responsibilityCount: result.responsibilities.length,
+    },
+    durationMs: Date.now() - start,
+    status: 'success',
+  });
+  return result;
 }

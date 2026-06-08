@@ -1,5 +1,27 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/log-prompt.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/log-tool-use.py"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",

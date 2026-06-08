@@ -23,9 +23,20 @@ const mockParseResponse = {
 
 describe('WizardShell', () => {
   beforeEach(() => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockParseResponse),
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/parse-resume')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ resumeData: mockParseResponse.resumeData }),
+        });
+      }
+      if (url.includes('/api/parse-jd')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ jobRequirements: mockParseResponse.jobRequirements }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
     }) as jest.Mock;
   });
 
