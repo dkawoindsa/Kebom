@@ -1,4 +1,5 @@
 import { geminiChat as groqChat } from "./gemini";
+import { logAiCall } from "./logger";
 import type { ResumeData, ExperienceItem, EducationItem } from "@/types/resume";
 
 const KNOWN_SKILLS: string[] = [
@@ -706,8 +707,10 @@ export function extractSkillsFromText(text: string): string[] {
 }
 
 export async function parseResume(pdfText: string): Promise<ResumeData> {
-  const text =
-    await groqChat(`중요 언어 규칙:
+  const start = Date.now();
+  let text: string;
+  try {
+    text = await groqChat(`중요 언어 규칙:
 - summary, description, role, company, institution, degree: 반드시 한국어로만 작성하라. 영어 단어 금지.
 - skills: 기술 스택은 영어 표준명 유지 (예: HTML5, JavaScript, React, MySQL).
 - 한자(漢字), 일본어, 아랍어 등 한국어·영어 외 모든 문자는 어떤 필드에도 절대 사용하지 마라.
@@ -747,6 +750,17 @@ export async function parseResume(pdfText: string): Promise<ResumeData> {
 
 이력서 텍스트:
 ${pdfText}`);
+  } catch (err) {
+    logAiCall({
+      caller: 'parseResume',
+      model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+      request: { pdfTextChars: pdfText.length },
+      durationMs: Date.now() - start,
+      status: 'error',
+      errorMessage: err instanceof Error ? err.message : 'unknown',
+    });
+    throw err;
+  }
 
   let data: Record<string, unknown> = {};
   try {
@@ -784,7 +798,7 @@ ${pdfText}`);
   const aiSummary =
     typeof data["summary"] === "string" ? data["summary"].trim() : "";
 
-  return {
+  const result: ResumeData = {
     name: aiName || extractNameFallback(pdfText),
     contactEmail: aiEmail || extractEmailFallback(pdfText),
     contactPhone: aiPhone || extractPhoneFallback(pdfText),
@@ -802,6 +816,22 @@ ${pdfText}`);
       aiEducation.length > 0 ? aiEducation : extractEducationFallback(pdfText),
     rawText: pdfText,
   };
+
+  logAiCall({
+    caller: 'parseResume',
+    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+    request: { pdfTextChars: pdfText.length },
+    result: {
+      skillCount: result.skills.length,
+      experienceCount: result.experience.length,
+      projectCount: (result.projects ?? []).length,
+      educationCount: result.education.length,
+    },
+    durationMs: Date.now() - start,
+    status: 'success',
+  });
+
+  return result;
 }
 
 export const __test__ = {

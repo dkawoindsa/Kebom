@@ -3,18 +3,17 @@
  */
 jest.mock('@/lib/ai/gemini');
 
-import { POST } from '@/app/api/analyze/route';
+import { POST } from '@/app/api/analyze/extras/route';
 import { geminiChat } from '@/lib/ai/gemini';
 
 const mockGeminiChat = geminiChat as jest.Mock;
 
-const MOCK_ANALYSIS_JSON = JSON.stringify({
-  score: 80,
-  scoreReason: '좋은 매칭입니다.',
-  skillMatches: [
-    { skill: 'TypeScript', status: 'match', evidence: '이력서에서 발견' },
-    { skill: 'Node.js', status: 'partial', suggestion: '심화 경험 추가 필요합니다.' },
-    { skill: 'Docker', status: 'missing', suggestion: 'Docker 학습을 권장합니다.' },
+const MOCK_EXTRAS_JSON = JSON.stringify({
+  interviewQuestions: [
+    { question: '도커 경험이 없는데 어떻게 배울 계획인가요?', advice: '구체적인 학습 계획을 말씀해 보세요.' },
+  ],
+  gapSuggestions: [
+    { jobRequirement: '도커 컨테이너 운영', recommendation: '관련 경험을 이력서에 추가해 보세요.' },
   ],
 });
 
@@ -37,47 +36,31 @@ const MOCK_JOB_REQUIREMENTS = {
 };
 
 function makeRequest(body: unknown): Request {
-  return new Request('http://localhost/api/analyze', {
+  return new Request('http://localhost/api/analyze/extras', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 }
 
-describe('POST /api/analyze', () => {
+describe('POST /api/analyze/extras', () => {
   beforeEach(() => {
-    mockGeminiChat.mockResolvedValue(MOCK_ANALYSIS_JSON);
+    mockGeminiChat.mockResolvedValue(MOCK_EXTRAS_JSON);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('유효한 resumeData + jobRequirements → 200 + AnalyzeResponse', async () => {
+  it('유효한 요청 → 200 + interviewQuestions + gapSuggestions', async () => {
     const res = await POST(
       makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })
     );
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.result).toBeDefined();
-    expect(typeof body.result.score).toBe('number');
-    expect(Array.isArray(body.result.skillMatches)).toBe(true);
-    // analyzeResumeVsJd는 extras 없이 빈 배열 반환 (extras는 별도 API)
-    expect(Array.isArray(body.result.interviewQuestions)).toBe(true);
-    expect(Array.isArray(body.result.gapSuggestions)).toBe(true);
-  });
-
-  it('skillMatches에 JD 스킬이 모두 포함된다', async () => {
-    const res = await POST(
-      makeRequest({ resumeData: MOCK_RESUME_DATA, jobRequirements: MOCK_JOB_REQUIREMENTS })
-    );
-
-    const body = await res.json();
-    const skills = (body.result.skillMatches as { skill: string }[]).map((m) => m.skill.toLowerCase());
-    expect(skills).toContain('typescript');
-    expect(skills).toContain('node.js');
-    expect(skills).toContain('docker');
+    expect(Array.isArray(body.interviewQuestions)).toBe(true);
+    expect(Array.isArray(body.gapSuggestions)).toBe(true);
   });
 
   it('resumeData 없음 → 400', async () => {

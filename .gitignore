@@ -12,5 +12,8 @@ next-env.d.ts
 phases/**/phase*-output.json
 phases/**/step*-output.json
 
+# AI usage logs (개발 환경 전용)
+logs/
+
 # Vercel
 .vercel
