@@ -1,5 +1,5 @@
-export const runtime = 'nodejs';
-export const maxDuration = 10;
+export const runtime = 'edge';
+export const maxDuration = 30;
 
 import { NextResponse } from 'next/server';
 import { analyzeExtras } from '@/lib/ai/analyze';

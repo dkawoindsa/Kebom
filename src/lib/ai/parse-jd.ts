@@ -39,11 +39,10 @@ const JD_PROMPT_SUFFIX = `
   "company": "회사명 (없으면 null)",
   "requiredSkills": ["필수 스킬1", "필수 스킬2"],
   "preferredSkills": ["우대 스킬1", "우대 스킬2"],
-  "responsibilities": ["주요 업무1", "주요 업무2"],
-  "rawText": "원본 텍스트 전체"
+  "responsibilities": ["주요 업무1", "주요 업무2"]
 }
 
-rawText는 아래 채용공고 원본 텍스트를 그대로 포함시켜라.`;
+위 5개 필드 외에 다른 필드를 추가하지 마라.`;
 
 function parseJdResponse(text: string, originalInput: string): JobRequirements {
   let data: Record<string, unknown> = {};
@@ -76,9 +75,7 @@ function parseJdResponse(text: string, originalInput: string): JobRequirements {
     requiredSkills,
     preferredSkills,
     responsibilities: toStringArray(data['responsibilities']),
-    rawText: typeof data['rawText'] === 'string' && data['rawText'].trim().length > 0
-      ? data['rawText']
-      : originalInput,
+    rawText: originalInput,
   };
 }
 
@@ -126,12 +123,22 @@ ${jobDescriptionText}`);
   return result;
 }
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
 export async function parseJdFromImage(
-  imageBuffer: Buffer,
+  imageBuffer: ArrayBuffer,
   mediaType: 'image/png' | 'image/jpeg'
 ): Promise<JobRequirements> {
   const start = Date.now();
-  const base64 = imageBuffer.toString('base64');
+  const base64 = arrayBufferToBase64(imageBuffer);
   let text: string;
   try {
     text = await groqChatWithImage(
@@ -149,7 +156,7 @@ ${JD_PROMPT_SUFFIX.replace('아래 채용공고 원본 텍스트', '이미지에
     logAiCall({
       caller: 'parseJdFromImage',
       model: process.env.GEMINI_VISION_MODEL ?? 'gemini-2.5-flash',
-      request: { imageSizeBytes: imageBuffer.length },
+      request: { imageSizeBytes: imageBuffer.byteLength },
       durationMs: Date.now() - start,
       status: 'error',
       errorMessage: err instanceof Error ? err.message : 'unknown',
@@ -161,7 +168,7 @@ ${JD_PROMPT_SUFFIX.replace('아래 채용공고 원본 텍스트', '이미지에
   logAiCall({
     caller: 'parseJdFromImage',
     model: process.env.GEMINI_VISION_MODEL ?? 'gemini-2.5-flash',
-    request: { imageSizeBytes: imageBuffer.length },
+    request: { imageSizeBytes: imageBuffer.byteLength },
     result: {
       requiredSkillCount: result.requiredSkills.length,
       preferredSkillCount: result.preferredSkills.length,
