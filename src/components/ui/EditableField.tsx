@@ -9,6 +9,7 @@ interface EditableFieldProps {
   multiline?: boolean;
   placeholder?: string;
   id?: string;
+  autoComplete?: string;
   'aria-describedby'?: string;
 }
 
@@ -19,11 +20,12 @@ export default function EditableField({
   multiline,
   placeholder,
   id,
+  autoComplete,
   'aria-describedby': ariaDescribedBy,
 }: EditableFieldProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const viewRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -88,6 +90,7 @@ export default function EditableField({
           aria-multiline="true"
           aria-describedby={ariaDescribedBy}
           placeholder={placeholder}
+          autoComplete={autoComplete}
           className={`${sharedClass} resize-none overflow-hidden`}
         />
       );
@@ -109,24 +112,21 @@ export default function EditableField({
         aria-label={label}
         aria-describedby={ariaDescribedBy}
         placeholder={placeholder}
+        autoComplete={autoComplete}
         className={sharedClass}
       />
     );
   }
 
   return (
-    <div
+    <button
+      type="button"
       ref={viewRef}
       id={id}
-      role="button"
-      tabIndex={0}
       aria-label={label}
       aria-describedby={ariaDescribedBy}
       onClick={enter}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); }
-      }}
-      className="flex items-start justify-between gap-2 cursor-pointer group focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
+      className="w-full flex items-start justify-between gap-2 cursor-pointer group focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
     >
       <span className="text-sm text-neutral-300 group-hover:text-white transition-colors">
         {value || <span className="text-neutral-500">{placeholder}</span>}
@@ -138,6 +138,6 @@ export default function EditableField({
       >
         stylus
       </span>
-    </div>
+    </button>
   );
 }

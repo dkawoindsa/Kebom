@@ -75,7 +75,7 @@ export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
     <div className="space-y-6">
       {/* Score */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">매칭 점수</p>
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">매칭 점수</h2>
         <div className="flex items-center gap-3">
           <div
             aria-label={`매칭 점수 ${score}점 / 100점`}
@@ -94,7 +94,7 @@ export default function StepAnalyze({ analysisResult }: StepAnalyzeProps) {
       {/* Heatmap */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">스킬 매칭</p>
+          <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">스킬 매칭</h2>
           {sorted.length > 0 && (
             <div className="flex gap-3 text-xs">
               <span className="text-green-400">{matchCount} 매칭</span>
