@@ -55,9 +55,9 @@ export default function StepUpload({ onSubmit, loading, error }: StepUploadProps
       )}
 
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">
           이력서 <span className="text-red-400 ml-0.5" aria-label="필수">*</span>
-        </p>
+        </h2>
         <FileDropzone
           onFileSelect={setResumeFile}
           accept="application/pdf"
@@ -72,9 +72,9 @@ export default function StepUpload({ onSubmit, loading, error }: StepUploadProps
       </div>
 
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">
           채용공고 <span className="text-red-400 ml-0.5" aria-label="필수">*</span>
-        </p>
+        </h2>
 
         <div role="tablist" aria-label="채용공고 입력 방식" className="flex border-b border-neutral-800">
           <button
@@ -118,7 +118,7 @@ export default function StepUpload({ onSubmit, loading, error }: StepUploadProps
               onChange={(e) => setJobDescText(e.target.value)}
               placeholder="채용공고 내용을 붙여넣으세요"
               maxLength={10000}
-              className="w-full rounded-lg bg-[#0a0a0a] border border-neutral-800 px-4 py-3 text-sm text-neutral-300 placeholder:text-neutral-600 focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 focus:border-neutral-600 min-h-[120px] max-h-[320px] resize-y overflow-y-auto"
+              className="w-full rounded-lg bg-[#0a0a0a] border border-neutral-800 px-4 py-3 text-sm text-neutral-300 placeholder:text-neutral-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 focus:border-neutral-600 min-h-[120px] max-h-[320px] resize-y overflow-y-auto"
             />
           </div>
         )}

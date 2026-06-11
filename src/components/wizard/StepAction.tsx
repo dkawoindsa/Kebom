@@ -125,9 +125,9 @@ export default function StepAction({ analysisResult }: StepActionProps) {
     <div className='space-y-6'>
       {/* Danger Zone */}
       <div className='rounded-lg bg-red-500/5 border border-red-500/20 p-6 space-y-4'>
-        <p className='text-sm font-medium text-neutral-400 uppercase tracking-wider'>
+        <h2 className='text-sm font-medium text-neutral-400 uppercase tracking-wider'>
           면접 예상 질문
-        </p>
+        </h2>
         {questions.length === 0 ? (
           <p className='text-sm text-neutral-500'>
             면접 예상 질문이 도출되지 않았습니다.
@@ -143,9 +143,9 @@ export default function StepAction({ analysisResult }: StepActionProps) {
 
       {/* Gap Suggestions */}
       <div className='rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4'>
-        <p className='text-sm font-medium text-neutral-400 uppercase tracking-wider'>
+        <h2 className='text-sm font-medium text-neutral-400 uppercase tracking-wider'>
           이력서 보완 제안
-        </p>
+        </h2>
         {gaps.length === 0 ? (
           <p className='text-sm text-neutral-500'>
             보완 제안이 없습니다. 이력서가 공고와 잘 맞습니다.

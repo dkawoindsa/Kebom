@@ -126,7 +126,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
 
       {/* 기본 정보 */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-4">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">기본 정보</p>
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">기본 정보</h2>
 
         <div className="space-y-1">
           <p className="text-xs text-neutral-500">이름 <span className="text-red-400" aria-label="필수">*</span></p>
@@ -151,6 +151,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
             onChange={(v) => updateDraft('contactEmail', v)}
             label="이메일"
             placeholder="이메일을 입력하세요"
+            autoComplete="email"
             aria-describedby={draft.contactEmail.trim().length === 0 ? 'error-email' : undefined}
           />
           {draft.contactEmail.trim().length === 0 && (
@@ -165,13 +166,14 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
             onChange={(v) => updateDraft('contactPhone', v)}
             label="전화번호"
             placeholder="전화번호를 입력하세요"
+            autoComplete="tel"
           />
         </div>
       </div>
 
       {/* 요약 */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">요약</p>
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">요약</h2>
         <EditableField
           value={draft.summary}
           onChange={(v) => updateDraft('summary', v)}
@@ -183,7 +185,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
 
       {/* 스킬 */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">스킬</p>
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">스킬</h2>
         <div className="flex flex-wrap gap-2">
           {draft.skills.map((skill, i) => (
             <SkillBadge
@@ -215,7 +217,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
           <button
             type="button"
             onClick={() => setAddingSkill(true)}
-            className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
+            className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded"
           >
             + 스킬 추가
           </button>
@@ -224,7 +226,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
 
       {/* 경력 */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">경력</p>
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">경력</h2>
 
         <div className="space-y-3">
           {draft.experience.map((exp, i) => (
@@ -283,7 +285,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <button
           type="button"
           onClick={handleAddExperience}
-          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
+          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded"
         >
           경력 추가
         </button>
@@ -291,7 +293,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
 
       {/* 프로젝트 */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">프로젝트</p>
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">프로젝트</h2>
 
         <div className="space-y-3">
           {(draft.projects ?? []).map((proj, i) => (
@@ -350,7 +352,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <button
           type="button"
           onClick={handleAddProject}
-          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
+          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded"
         >
           프로젝트 추가
         </button>
@@ -358,7 +360,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
 
       {/* 학력 */}
       <div className="rounded-lg bg-[#141414] border border-neutral-800 p-6 space-y-3">
-        <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">학력</p>
+        <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">학력</h2>
 
         <div className="space-y-3">
           {draft.education.map((edu, i) => (
@@ -407,7 +409,7 @@ export default function StepRead({ resumeData, jobRequirements, onConfirm, loadi
         <button
           type="button"
           onClick={handleAddEducation}
-          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 rounded"
+          className="text-neutral-400 text-sm hover:text-neutral-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded"
         >
           학력 추가
         </button>

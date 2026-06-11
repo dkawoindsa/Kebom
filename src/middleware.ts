@@ -18,10 +18,18 @@ try {
 }
 
 export async function middleware(request: NextRequest) {
-  if (!ratelimit) return NextResponse.next();
+  if (!ratelimit) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[middleware] Rate limiting disabled — UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not set');
+    }
+    return NextResponse.next();
+  }
 
   const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anonymous';
+    request.headers.get('x-real-ip') ??
+    request.headers.get('cf-connecting-ip') ??
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    'anonymous';
 
   const { success, limit, reset, remaining } = await ratelimit.limit(ip);
 
@@ -43,5 +51,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/parse-resume', '/api/analyze'],
+  matcher: ['/api/:path*'],
 };

@@ -104,32 +104,26 @@ export default function FileDropzone({
 
   return (
     <div>
-      <div
-        role="button"
-        tabIndex={0}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={onInputChange}
+        data-testid="file-input"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+      <button
+        type="button"
         aria-label={guideLabel}
-        className={`border rounded-lg bg-[#0f0f0f] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 ${borderClass}`}
+        className={`w-full border rounded-lg bg-[#0f0f0f] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${borderClass}`}
         onDragOver={onDragOver}
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={onClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick();
-          }
-        }}
       >
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          className="hidden"
-          onChange={onInputChange}
-          data-testid="file-input"
-        />
-
         {selectedFile ? (
           <>
             <p className="text-sm text-green-300">{selectedFile.name}</p>
@@ -143,7 +137,7 @@ export default function FileDropzone({
             </p>
           </>
         )}
-      </div>
+      </button>
 
       {error && (
         <p className="text-xs text-red-400 mt-1" role="alert">{error}</p>
